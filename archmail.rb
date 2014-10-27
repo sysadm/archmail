@@ -45,7 +45,7 @@ def fetch_all_headers(folder)
 end
 
 def create_messages_tree_in_folder(folder)
-  p "Create message tree in folder #{folder}"
+  p "Create message tree in folder #{folder.name}"
   threaded_list=@imap.thread("REFERENCES", 'ALL', 'UTF-8')
   threaded_list.each do |thread_member|
     if thread_member.children.count > 0
@@ -100,6 +100,28 @@ def fetch_message_headers(folder, seqno)
   )
 end
 
+def save_message(message)
+  seqno = @imap.search(["HEADER", "MESSAGE-ID", message.message_id])[0]
+  data = @imap.fetch(seqno, ["RFC822.HEADER", "RFC822"])[0]
+  @mail = Mail.read_from_string data.attr["RFC822"]
+  unless @mail.attachments.empty?
+    message.update_attribute(:has_attachment, true)
+    path = FileUtils.mkdir_p(([@arch_path] + message.folder.ancestry_path + [message.id]).join('/'))[0] + "/"
+    @mail.attachments.each do | attachment |
+      filename = attachment.filename
+      content_type = attachment.content_type.split(";")[0]
+      begin
+        file = File.open(path + filename, "w+b", 0644) {|f| f.write attachment.body.decoded}
+        Attachment.create(message: message, filename: filename, content_type: content_type, size: file) if file
+      rescue => e
+        puts "Unable to save data for #{filename} because #{e.message}"
+      end
+    end
+  end
+  #body = mail.text_part.decoded
+  #body =
+end
+
 def archmail
   clean_up
   create_folder_root_structure
@@ -108,9 +130,8 @@ def archmail
     p "Folder: #{folder.id} - #{folder.imap_name}"
     fetch_all_headers(folder)
     create_messages_tree_in_folder(folder)
-
-
   end
 end
+
 
 #imap.disconnect
