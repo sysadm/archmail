@@ -16,8 +16,6 @@ def imap_connect
   @imap.authenticate('login', @login, @pass)
 end
 
-imap_connect
-
 def create_folder_root_structure
   Dir.mkdir @arch_path
   mailboxes = @imap.list("", "%").to_a
@@ -41,7 +39,10 @@ def create_subfolder_tree(folder)
 end
 
 def fetch_all_headers(folder)
-  @imap.search(['ALL']).each{|seqno| fetch_message_headers(folder, seqno) }
+  queue = @imap.search(['ALL'])
+  p "Fetch headers for #{queue.count} message(s)"
+  queue.each{|seqno| fetch_message_headers(folder, seqno); print_and_flush(".") }
+  puts " done"
 end
 
 def create_messages_tree_in_folder(folder)
@@ -86,7 +87,6 @@ def fetch_message_headers(folder, seqno)
   mail = Mail.read_from_string data.attr["RFC822.HEADER"]
   subject = envelope.subject.decode unless envelope.subject.nil?
   from = envelope.from[0].name.decode unless envelope.from[0].name.nil?
-  p "Create #{data.attr["UID"]} - from: #{from} subj: #{subject}"
   Message.create(flags: data.attr["FLAGS"].join(","),
     size: data.attr["RFC822.SIZE"],
     created_at: data.attr["INTERNALDATE"].to_datetime,
@@ -101,9 +101,35 @@ def fetch_message_headers(folder, seqno)
 end
 
 def save_message(message)
+  imap_connect unless @imap
+  @imap.select(message.folder.imap_name)
   seqno = @imap.search(["HEADER", "MESSAGE-ID", message.message_id])[0]
   data = @imap.fetch(seqno, ["RFC822.HEADER", "RFC822"])[0]
   @mail = Mail.read_from_string data.attr["RFC822"]
+  file = ([@arch_path] + message.folder.ancestry_path).join('/') + "/#{message.id}.html"
+  header = message.rfc_header.rfc_to_html
+  if @mail.html_part
+    begin
+      body = @mail.html_part.decoded.to_utf8(@mail.text_part.charset)
+      File.open(file, "w+b", 0644) {|f| f.write "<div id='rfc'>#{header}</div><br />#{body}"}
+    rescue => e
+      puts "Unable to save data for #{file} because #{e.message}"
+    end
+  elsif @mail.text_part
+    begin
+      body = @mail.text_part.decoded.to_utf8(@mail.text_part.charset).body_to_html
+      File.open(file, "w+b", 0644) {|f| f.write "<div id='rfc'>#{header}</div><br />#{body}"}
+    rescue => e
+      puts "Unable to save data for #{file} because #{e.message}"
+    end
+  else
+    begin
+      body = @mail.body.decoded.to_utf8(@mail.charset).body_to_html
+      File.open(file, "w+b", 0644) {|f| f.write "<div id='rfc'>#{header}</div><br />#{body}"}
+    rescue => e
+      puts "Unable to save data for #{file} because #{e.message}"
+    end
+  end
   unless @mail.attachments.empty?
     message.update_attribute(:has_attachment, true)
     path = FileUtils.mkdir_p(([@arch_path] + message.folder.ancestry_path + [message.id]).join('/'))[0] + "/"
@@ -118,11 +144,10 @@ def save_message(message)
       end
     end
   end
-  #body = mail.text_part.decoded
-  #body =
 end
 
 def archmail
+  imap_connect
   clean_up
   create_folder_root_structure
   Folder.all.each do |folder|
@@ -131,7 +156,11 @@ def archmail
     fetch_all_headers(folder)
     create_messages_tree_in_folder(folder)
   end
+  messages = Message.all
+  p "Fetch and save #{messages.count} message(s)"
+  messages.each{|message| save_message(message); print_and_flush(".") }
+  puts " done"
 end
 
-
+#archmail
 #imap.disconnect

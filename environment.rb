@@ -25,6 +25,11 @@ Dir.glob("./lib/db/migrations/*.rb").each do |file|
   require file
 end
 
+def print_and_flush(str)
+  print str
+  $stdout.flush
+end
+
 silence_warnings do
   OpenSSL::SSL.const_set(:VERIFY_PEER, OpenSSL::SSL::VERIFY_NONE)
 end
