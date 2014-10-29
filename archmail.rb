@@ -87,6 +87,7 @@ def fetch_message_headers(folder, seqno)
   mail = Mail.read_from_string data.attr["RFC822.HEADER"]
   subject = envelope.subject.decode unless envelope.subject.nil?
   from = envelope.from[0].name.decode unless envelope.from[0].name.nil?
+  from = mail.from[0] unless from
   Message.create(flags: data.attr["FLAGS"].join(","),
     size: data.attr["RFC822.SIZE"],
     created_at: data.attr["INTERNALDATE"].to_datetime,
@@ -115,7 +116,7 @@ def save_message(message)
     rescue => e
       puts "Unable to save data for #{file} because #{e.message}"
     end
-  elsif @mail.text_part
+  elsif @mail.text_part and @mail.text_part.body.decoded.size > 0
     begin
       body = @mail.text_part.decoded.to_utf8(@mail.text_part.charset).body_to_html
       File.open(file, "w+b", 0644) {|f| f.write "<div id='rfc'>#{header}</div><br />#{body}"}
@@ -124,7 +125,13 @@ def save_message(message)
     end
   else
     begin
-      body = @mail.body.decoded.to_utf8(@mail.charset).body_to_html
+      if @mail.body.multipart?
+        @content = []
+        extract_inline_messages_from_multipart_mail(@mail)
+        body = @content.join('==<br />')
+      else
+        body = @mail.body.decoded.to_utf8(@mail.charset).body_to_html
+      end
       File.open(file, "w+b", 0644) {|f| f.write "<div id='rfc'>#{header}</div><br />#{body}"}
     rescue => e
       puts "Unable to save data for #{file} because #{e.message}"
@@ -133,14 +140,27 @@ def save_message(message)
   unless @mail.attachments.empty?
     message.update_attribute(:has_attachment, true)
     path = FileUtils.mkdir_p(([@arch_path] + message.folder.ancestry_path + [message.id]).join('/'))[0] + "/"
-    @mail.attachments.each do | attachment |
-      filename = attachment.filename
+    @mail.attachments.each_with_index do | attachment, index |
       content_type = attachment.content_type.split(";")[0]
+      content_type == "message/rfc822" ? filename = "attach_#{index}.eml" : filename = attachment.filename
       begin
         file = File.open(path + filename, "w+b", 0644) {|f| f.write attachment.body.decoded}
         Attachment.create(message: message, filename: filename, content_type: content_type, size: file) if file
       rescue => e
         puts "Unable to save data for #{filename} because #{e.message}"
+      end
+    end
+  end
+end
+
+def extract_inline_messages_from_multipart_mail(mail)
+  mail.parts.each do |part|
+    unless part.body.decoded.empty?
+      if part.content_type.start_with?('message/rfc822')
+        inline_mail = Mail.read_from_string part.body.to_s
+        extract_inline_messages_from_multipart_mail(inline_mail)
+      else
+        @content << part.body.decoded.to_utf8(part.charset).body_to_html
       end
     end
   end

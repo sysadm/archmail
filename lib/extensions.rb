@@ -26,7 +26,7 @@ class String
 
   def to_utf8(charset=nil)
     charset = charset.downcase if charset
-    charset and self.encoding.to_s != "UTF-8" ? self.encode("UTF-8", charset) : self
+    (charset and self.encoding.to_s) != "UTF-8" ? self.encode("UTF-8", charset) : self
   end
 
   def body_to_html
