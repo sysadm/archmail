@@ -3,6 +3,7 @@ require './environment'
 
 @login = ENV['MAIL_LOGIN']
 @pass = ENV['MAIL_PASS']
+@server = ENV['MAIL_SERVER']
 
 @arch_path = "#{@login}_#{Date.today.to_s}"
 
@@ -12,12 +13,15 @@ def clean_up
 end
 
 def imap_connect
-  @imap = Net::IMAP.new('pop.multitel.be', 993, :ssl => { :verify_mode => OpenSSL::SSL::VERIFY_NONE })
+  @imap = Net::IMAP.new(@server, 993, :ssl => { :verify_mode => OpenSSL::SSL::VERIFY_NONE })
   @imap.authenticate('login', @login, @pass)
 end
 
 def create_folder_root_structure
   Dir.mkdir @arch_path
+  FileUtils.cp_r "lib/views/css", "#{@arch_path}"
+  FileUtils.cp_r "lib/views/images", "#{@arch_path}"
+  FileUtils.cp_r "lib/views/js", "#{@arch_path}"
   mailboxes = @imap.list("", "%").to_a
   mailboxes.each{|mailbox|
     folder = Folder.find_or_create_by(name: mailbox.name, imap_name: mailbox.name)

@@ -1,0 +1,25 @@
+- define_context
+doctype html
+html
+  head
+    title Archmail index
+    meta http-equiv="content-type" content="text/html; charset=UTF-8"
+    meta name="keywords" content="template language"
+    meta name="author" content="Jerzy Sładkowski"
+    link rel="shortcut icon" href="images/favicon.ico"
+
+  body
+    h3 Archive mail of user: #{@user} until: #{Date.today}
+    .container
+      .row
+        .col-sm-3.col-md-3
+          .panel-group#accordion
+    #menu
+      .menucontent
+        ul
+          - @env.folders.each do |folder|
+            li
+              =folder.name
+              - if folder.children.count > 0
+                ul
+                  == @view.render(:partial => 'folder', :locals => { :parent_folder => folder } )
