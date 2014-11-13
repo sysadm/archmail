@@ -32,4 +32,9 @@ class String
   def body_to_html
     self.gsub!("\n", "<br />")
   end
+
+  def print_and_flush
+    print self
+    $stdout.flush
+  end
 end

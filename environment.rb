@@ -40,18 +40,21 @@ Dir.glob("./lib/db/migrations/*.rb").each do |file|
 end
 
 class Env
-  attr_accessor :folders
+  attr_accessor :user, :pass, :server, :arch_path, :folders, :imap
   def initialize
-    @folders = Folder.roots
+    @user = ENV['MAIL_LOGIN']
+    @pass = ENV['MAIL_PASS']
+    @server = ENV['MAIL_SERVER']
+    @arch_path = "#{@user}_#{Date.today.to_s}"
+  end
+  def imap_connect
+    @imap = Net::IMAP.new(@server, 993, :ssl => { :verify_mode => OpenSSL::SSL::VERIFY_NONE })
+    @imap.authenticate('login', @user, @pass)
   end
 end
 
 def define_context
   @view = Class.new(ActionView::Base).new("lib/views/templates")
   @env = Env.new
-end
-
-def print_and_flush(str)
-  print str
-  $stdout.flush
+  @env.folders = Folder.roots
 end
