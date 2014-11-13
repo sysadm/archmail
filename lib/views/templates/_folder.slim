@@ -1,7 +1,6 @@
-- define_context
 - parent_folder.children.each do |folder|
   li
-    =folder.name
+    = folder.name
     - if folder.children.count > 0
       ul
-        == @view.render(:partial => 'folder', :locals => { :parent_folder => folder } )
+        == view.render(partial: 'folder', locals: { parent_folder: folder } )

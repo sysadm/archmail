@@ -25,4 +25,12 @@ class Archmail
     messages.each{|m| @message.backup(m); ".".print_and_flush }
     puts " done"
   end
+
+  def create_html_indexes
+    gen = HtmlGenerator.new
+    gen.root_index_page
+  end
 end
+
+# arch = Archmail.new
+# arch.backup

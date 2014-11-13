@@ -17,6 +17,13 @@ silence_warnings do
   OpenSSL::SSL.const_set(:VERIFY_PEER, OpenSSL::SSL::VERIFY_NONE)
 end
 
+begin
+  CONFIG ||= YAML.load_file("./config.yml")
+rescue => e
+  puts "Unable to load data from config, you must create it (or copy from config.yml.example and modify it)."
+  exit 1
+end
+
 I18n.enforce_available_locales = false
 Slim::Engine.set_default_options(:format => :xhtml)
 
@@ -40,15 +47,16 @@ Dir.glob("./lib/db/migrations/*.rb").each do |file|
 end
 
 class Env
-  attr_accessor :user, :pass, :server, :arch_path, :folders, :imap
+  attr_accessor :user, :pass, :server, :arch_path, :imap
   def initialize
-    @user = ENV['MAIL_LOGIN']
-    @pass = ENV['MAIL_PASS']
-    @server = ENV['MAIL_SERVER']
+    @user = CONFIG['login']
+    @pass = CONFIG['password']
+    @server = CONFIG['server']
+    @port = CONFIG['port']
     @arch_path = "#{@user}_#{Date.today.to_s}"
   end
   def imap_connect
-    @imap = Net::IMAP.new(@server, 993, :ssl => { :verify_mode => OpenSSL::SSL::VERIFY_NONE })
+    @imap = Net::IMAP.new(@server, @port, :ssl => { :verify_mode => OpenSSL::SSL::VERIFY_NONE })
     @imap.authenticate('login', @user, @pass)
   end
 end
@@ -56,5 +64,5 @@ end
 def define_context
   @view = Class.new(ActionView::Base).new("lib/views/templates")
   @env = Env.new
-  @env.folders = Folder.roots
+  @user = @env.user
 end

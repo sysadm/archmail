@@ -5,8 +5,9 @@ class HtmlGenerator
   end
 
   def root_index_page
+    @folders = Folder.roots
     file = "#{@env.arch_path}/index.html"
-    File.open(file, "w+b", 0644) {|f| f.write @view.render(template: "index")}
+    File.open(file, "w+b", 0644) {|f| f.write @view.render(template: "index", :locals => { :folders => @folders })}
   end
 
   # def index_page(folder)

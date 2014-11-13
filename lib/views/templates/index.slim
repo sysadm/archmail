@@ -1,4 +1,3 @@
-- define_context
 doctype html
 html
   head
@@ -9,7 +8,7 @@ html
     link rel="shortcut icon" href="images/favicon.ico"
 
   body
-    h3 Archive mail of user: #{@user} until: #{Date.today}
+    h3 Archive mail of user: #{current_user} until: #{Date.today}
     .container
       .row
         .col-sm-3.col-md-3
@@ -17,9 +16,9 @@ html
     #menu
       .menucontent
         ul
-          - @env.folders.each do |folder|
+          - folders.each do |folder|
             li
-              =folder.name
+              = folder.name
               - if folder.children.count > 0
                 ul
-                  == @view.render(:partial => 'folder', :locals => { :parent_folder => folder } )
+                  == view.render(partial: 'folder', locals: { parent_folder: folder } )

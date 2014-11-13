@@ -1,3 +1,6 @@
 .idea
 lib/db/mailbox.db
 example
+config.yml
+sladkowski_*
+.lock-*
