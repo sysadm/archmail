@@ -1,0 +1,12 @@
+body{
+    margin-top:50px;
+    font-family: "Lucida Grande", Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    color: #333;
+    background: url(assets/images/linen.jpg) repeat #d1d5d8;
+    margin: 0;
+}
+.glyphicon { margin-right:10px; }
+.panel-body { padding:0px; }
+.panel-body table tr td { padding-left: 15px }
+.panel-body .table {margin-bottom: 0px; }

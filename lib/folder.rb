@@ -11,9 +11,7 @@ class Folder < ActiveRecord::Base
   def create_root_structure
     @env.imap_connect
     Dir.mkdir @env.arch_path
-    FileUtils.cp_r "lib/views/css", "#{@env.arch_path}"
-    FileUtils.cp_r "lib/views/images", "#{@env.arch_path}"
-    FileUtils.cp_r "lib/views/js", "#{@env.arch_path}"
+    FileUtils.cp_r "lib/views/assets", "#{@env.arch_path}"
     mailboxes = @env.imap.list("", "%").to_a
     mailboxes.each{|mailbox|
       folder = Folder.find_or_create_by(name: mailbox.name, imap_name: mailbox.name)

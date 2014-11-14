@@ -25,7 +25,7 @@ rescue => e
 end
 
 I18n.enforce_available_locales = false
-Slim::Engine.set_default_options(:format => :xhtml)
+Slim::Engine.set_default_options(:format => :html5)
 
 module Rails
   def self.env
