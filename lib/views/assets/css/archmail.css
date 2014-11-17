@@ -124,10 +124,6 @@ body{
     .navbar-collapse{
         padding: 0;
     }
-    .sidebar-nav .navbar li a:hover {
-        background-color: #428bca;
-        color: white;
-    }
     .sidebar-nav .navbar li a > .caret {
         margin-top: 8px;
     }
@@ -139,6 +135,31 @@ body{
 @media (min-width: 1640px){
     .sidebar-nav .navbar li a #logo {
         max-width: 260px;
+    }
+}
+@media {
+    .collapse ul.nav-list li a {
+        color: #777777;
+    }
+    .sidebar-nav .navbar li .logo {
+        background-color: #eeeeee;
+    }
+    .sidebar-nav .navbar li a.children {
+        color: #d4145a;
+    }
+    .sidebar-nav .navbar li a:hover {
+        background-color: #d4145a;
+        color: white;
+    }
+    .sidebar-nav .navbar li a.children {
+        color: #d4145a;
+    }
+    .sidebar-nav .navbar li a:hover.children {
+        background-color: #d4145a;
+        color: white;
+    }
+    .sidebar-nav .navbar li a:hover.logo {
+        background-color: #eeeeee;
     }
 }
 #mobilelogo {
