@@ -48,23 +48,20 @@ html
                   <a href="#" data-toggle="collapse" data-target="#toggleDemo" data-parent="#mainmenu" class="collapsed children">
                   <span class="fa fa-folder"></span> Submenu 1
                   </a>
-                  <div class="collapse" id="toggleDemo" style="height: 0px;">
-                    <ul class="nav nav-list">
-                      <li><a href="#">Submenu1.1</a></li>
-                      <li><a href="#">Submenu1.2</a></li>
-                      <li><a href="#">Submenu1.3</a></li>
-                      <li>
+                  .collapse#toggleDemo
+                    ul.nav.nav-list
+                      li
+                        <a href="#">Submenu1.1</a>
+                      li
+                        <a href="#">Submenu1.2</a>
+                      li
                         <a href="#" data-toggle="collapse" data-target="#toggleDemobla" data-parent="#sidenav01" class="collapsed children">
-                        <span class="glyphicon glyphicon-cloud"></span> Submenu bla <span class="caret pull-right"></span>
+                        <span class="fa fa-folder"></span> Submenu bla <span class="caret pull-right"></span>
                         </a>
-                        <div class="collapse" id="toggleDemobla" style="height: 0px;">
-                          <ul class="nav nav-list">
-                            <li><a href="#">Submenu bla 1</a></li>
-                          </ul>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
+                        .collapse#toggleDemobla
+                          ul.nav.nav-list
+                            li
+                              <a href="#">Submenu bla 1</a>
                 li.active
                   <a href="#" data-toggle="collapse" data-target="#toggleDemo2" data-parent="#mainmenu" class="collapsed children">
                   <span class="fa fa-folder"></span> Submenu 2 <span class="caret pull-right"></span>
