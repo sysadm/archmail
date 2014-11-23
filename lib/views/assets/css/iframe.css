@@ -1,0 +1,28 @@
+html,body{
+    background-color: white;
+    height: 100%;
+    overflow: hidden;
+}
+p {
+    font-size: 14px;
+}
+a {
+    font-size: 14px;
+    font-weight: bold;
+    color: #777777;
+}
+a:hover {
+    font-size: 14px;
+    font-weight: bold;
+    color: #d4145a;
+    text-decoration: none;
+}
+.maillist {
+    margin-left: 0;
+}
+ul {
+    font-size: 14px;
+    list-style-type: none;
+    padding:0;
+    margin:0;
+}

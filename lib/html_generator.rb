@@ -4,10 +4,16 @@ class HtmlGenerator
     define_context
   end
 
-  def root_index_page
-    @folders = Folder.roots
+  def index_pages
+    @folders = Folder.roots.order(:name)
     file = "#{@env.arch_path}/index.html"
     File.open(file, "w+b", 0644) {|f| f.write @view.render(template: "index", :locals => { :folders => @folders })}
+    file = "#{@env.arch_path}/statistic.html"
+    File.open(file, "w+b", 0644) {|f| f.write @view.render(template: "statistic")}
+    file = "#{@env.arch_path}/about.html"
+    File.open(file, "w+b", 0644) {|f| f.write @view.render(template: "about")}
+    file = "#{@env.arch_path}/license.html"
+    File.open(file, "w+b", 0644) {|f| f.write @view.render(template: "license")}
   end
 
   # def index_page(folder)

@@ -1,6 +1,12 @@
-- parent_folder.children.each do |folder|
-  li
-    = folder.name
-    - if folder.children.count > 0
-      ul
-        == view.render(partial: 'folder', locals: { parent_folder: folder } )
+a.children.collapsed.folder id="folder_#{parent_folder.id}" href="#" data-toggle="collapse" data-target="#toggle_folder_#{parent_folder.id}" data-parent="#mainmenu"
+  == folder_with_icon parent_folder.id
+  span.caret.pull-right
+.collapse id="toggle_folder_#{parent_folder.id}"
+  ul.nav.nav-list
+    - parent_folder.children.each do |folder|
+      li
+        - if folder.children.count > 0
+          == view.render(partial: 'folder', locals: { parent_folder: folder } )
+        - else
+          a.folder id="folder_#{folder.id}" href="#"
+            == folder_with_icon folder.id

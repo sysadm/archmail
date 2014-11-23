@@ -23,7 +23,7 @@ class Folder < ActiveRecord::Base
   end
 
   def create_subfolder_tree(folder)
-    mailboxes = @env.imap.list("#{folder.name}.", "%").to_a
+    mailboxes = @env.imap.list("#{folder.imap_name}.", "%").to_a
     mailboxes.each{|mailbox|
       name = mailbox.name.gsub("#{folder.imap_name}.", "")
       subfolder = folder.children.create(name: name, imap_name: mailbox.name)

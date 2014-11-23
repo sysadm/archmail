@@ -1,0 +1,22 @@
+== view.render(partial: 'frame_header')
+body
+  .page-header
+    h3
+      i.fa.fa-list
+      |  Basic information and statistics
+  p
+    'This backup was created
+    b = Date.today
+    '  at
+    b = Time.now.strftime("%H:%M")
+    '  for user
+    b = current_user
+  p
+    'Server:
+    b = server
+  p
+    'Number of all nested folders:
+    b = Folder.count
+  p
+    'Number of messages:
+    b = Message.count
