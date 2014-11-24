@@ -1,0 +1,14 @@
+== view.render(partial: 'frame_header')
+body
+  .page-header
+    h3
+      == folder_with_icon(folder.id)
+      '  folder, threaded maillist
+    h4.left_margin
+      '  Messages: #{folder.messages.count}, Size: #{folder.messages.sum(:size)}
+  .message_list
+    ul
+      - folder.messages.each_with_index do |message, idx|
+        - idx.odd? ? odd = "odd" : odd = ""
+        li class="#{odd}"
+          = message.subject

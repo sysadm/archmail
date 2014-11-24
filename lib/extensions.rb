@@ -21,7 +21,6 @@ class String
     KNOWN_MAIL_ATTRIBUTES.each{|attr| self.gsub!("\n#{attr}", "\n<b>#{attr}</b>") }
     self.gsub!(/\t+/,'&nbsp;&nbsp;')
     self.gsub!(/[\r\n]+/,'<br />')
-    self + '<hr>'
   end
 
   def to_utf8(charset=nil)

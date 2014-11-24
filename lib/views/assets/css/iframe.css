@@ -1,7 +1,8 @@
 html,body{
     background-color: white;
     height: 100%;
-    overflow: hidden;
+    width: 100%;
+    overflow: auto;
 }
 p {
     font-size: 14px;
@@ -21,8 +22,28 @@ a:hover {
     margin-left: 0;
 }
 ul {
-    font-size: 14px;
-    list-style-type: none;
-    padding:0;
-    margin:0;
+    font-size: 13px;
+    padding:0px;
+    margin:8px;
+}
+#rfc {
+    display: none;
+}
+#attachments {
+    display: none;
+}
+#hide_rfc {
+    display: none;
+}
+#hide_attachments {
+    display: none;
+}
+.message_header a {
+    font-weight: normal;
+}
+.left_margin {
+    margin-left: 28px;
+}
+.odd {
+    background-color: #f8f8f8;
 }

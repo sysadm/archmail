@@ -1,5 +1,5 @@
 class Message < ActiveRecord::Base
-  attr_reader :env
+  attr_reader :env, :view
   acts_as_tree
   belongs_to :folder
   has_many :attachments
@@ -7,6 +7,7 @@ class Message < ActiveRecord::Base
 
   def define_context
     @env ||= Env.new
+    @view ||= Class.new(ActionView::Base).new("lib/views/templates")
   end
 
   def fetch_all_headers(folder)
@@ -87,14 +88,16 @@ class Message < ActiveRecord::Base
     if @mail.html_part
       begin
         body = @mail.html_part.decoded.to_utf8(@mail.text_part.charset)
-        File.open(file, "w+b", 0644) {|f| f.write "<div id='rfc'>#{header}</div><br />#{body}"}
+        html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
+        File.open(file, "w+b", 0644) {|f| f.write html}
       rescue => e
         puts "Unable to save data for #{file} because #{e.message}"
       end
     elsif @mail.text_part and @mail.text_part.body.decoded.size > 0
       begin
         body = @mail.text_part.decoded.to_utf8(@mail.text_part.charset).body_to_html
-        File.open(file, "w+b", 0644) {|f| f.write "<div id='rfc'>#{header}</div><br />#{body}"}
+        html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
+        File.open(file, "w+b", 0644) {|f| f.write html}
       rescue => e
         puts "Unable to save data for #{file} because #{e.message}"
       end
@@ -107,7 +110,8 @@ class Message < ActiveRecord::Base
         else
           body = @mail.body.decoded.to_utf8(@mail.charset).body_to_html
         end
-        File.open(file, "w+b", 0644) {|f| f.write "<div id='rfc'>#{header}</div><br />#{body}"}
+        html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
+        File.open(file, "w+b", 0644) {|f| f.write html}
       rescue => e
         puts "Unable to save data for #{file} because #{e.message}"
       end

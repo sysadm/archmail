@@ -1,0 +1,36 @@
+== view.render(partial: 'frame_header')
+body
+  .page-header
+    h3
+      i.fa.fa-envelope
+      = message.subject
+  .message_header
+    p
+      'From:
+      b = message.from
+    p
+      'Date:
+      b = message.created_at.to_s
+    a#show_rfc href="#"
+      'Show rfc
+      i.fa.fa-caret-down
+    a#hide_rfc href="#"
+      'Hide rfc
+      i.fa.fa-caret-up
+    - if message.has_attachment?
+      a#show_attachments href="#"
+        '    Show attachments
+        i.fa.fa-caret-down
+      a#hide_attachments href="#"
+        '    Hide attachments
+        i.fa.fa-caret-up
+    hr
+  .message_body
+    #rfc
+      == rfc_header
+      hr
+    - if message.has_attachment?
+      #attachments
+        == view.render(partial: 'attachments', locals: { attachments: message.attachments })
+    #content
+      == body
