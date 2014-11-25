@@ -16,21 +16,24 @@ class Archmail
     @folder.create_root_structure
     @message = Message.new
     Folder.all.each do |folder|
-      p "Folder: #{folder.id} - #{folder.imap_name}"
+      puts "Folder: #{folder.id} - #{folder.imap_name}"
       @message.fetch_all_headers(folder)
       @message.create_messages_tree_in_folder(folder)
     end
     messages = Message.all
-    p "Fetch and save #{messages.count} message(s)"
+    puts "Fetch and save #{messages.count} message(s)"
     messages.each{|m| @message.backup(m); ".".print_and_flush }
     puts " done"
+    create_html_indexes
   end
 
   def create_html_indexes
-    gen = HtmlGenerator.new
-    gen.root_index_page
+    puts "Run html generators..."
+    html_generator = HtmlGenerator.new
+    html_generator.generate_all
+    puts "Backup complete."
   end
 end
 
-# arch = Archmail.new
-# arch.backup
+@a = Archmail.new
+# @a.backup

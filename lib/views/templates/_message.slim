@@ -1,0 +1,9 @@
+- parent_message.children.each do |message|
+  li class="#{oddclass}"
+    a.message id="#{message.id}.html" href="#"
+      - message.subject = "no subject" if message.subject.nil? or message.subject.empty?
+      '#{message.subject.truncate(60)} #{message.from}
+      i  #{message.created_at.to_s}
+  - if message.children.count > 0
+      ul.nested
+        == view.render(partial: 'message', locals: { parent_message: message } )

@@ -1,5 +1,20 @@
-ul
-- attachments.each do |attachment|
-  li
-    = attachment.filename
-
+<table id="attachments_table">
+- for attachment in attachments
+  tr
+    td
+      i.fa.fa-file.fa-2x
+    td
+      p
+        'Original filename:
+        b = attachment.original_filename
+      p
+        'Type:
+        b = attachment.content_type
+      p
+        'Size:
+        b = number_to_human_size(attachment.size, precision: 3)
+    td
+      a href="#{attachment.message.id}/#{attachment.filename}"
+        i.fa.fa-eye.fa-2x
+        br open
+</table>

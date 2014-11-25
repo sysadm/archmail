@@ -35,8 +35,9 @@ class HtmlGenerator
         time_range = first..last
       end
       file = "#{path}/threaded.html"
+      messages = folder.messages.roots
       File.open(file, "w+b", 0644) {|f| f.write @view.render(template: "threaded",
-                                                             locals: { folder: folder, time_range: time_range })}
+                                                             locals: { folder: folder, time_range: time_range, messages: messages })}
       file = "#{path}/date.html"
       messages = folder.messages.order(:created_at)
       File.open(file, "w+b", 0644) {|f| f.write @view.render(template: "date",

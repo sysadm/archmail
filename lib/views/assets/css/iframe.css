@@ -18,6 +18,10 @@ a:hover {
 .maillist {
     margin-left: 0;
 }
+.nested {
+    list-style-type: square;
+    list-style-position: inside;
+}
 ul {
     font-size: 13px;
     padding:0px;
@@ -41,9 +45,27 @@ ul {
 .odd {
     background-color: #f8f8f8;
 }
+.even {
+    background-color: white;
+}
 .back {
     font-size: 24px;
 }
 #frame_message_div {
     display: none;
 }
+#attachments_table {
+    width: 50%;
+    margin-left: 5%;
+}
+#attachments_table tr {
+    horizontal-align:center;
+    vertical-align: middle;
+}
+#attachments_table tr>td p {
+    margin: 0 0 0 10;
+    line-height: 12px;
+    font-size: 12px;
+}
+#attachments_table tr:nth-child(even) {background: #f8f8f8;}
+#attachments_table tr:nth-child(odd) {background: #FFF}

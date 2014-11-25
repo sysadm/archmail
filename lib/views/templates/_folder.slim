@@ -1,5 +1,5 @@
 a.children.collapsed.folder id="folder_#{parent_folder.id}" href="#" data-toggle="collapse" data-target="#toggle_folder_#{parent_folder.id}" data-parent="#mainmenu"
-  == folder_with_icon parent_folder.id
+  == folder_with_icon parent_folder.id, :prefix
   span.caret.pull-right
 .collapse id="toggle_folder_#{parent_folder.id}"
   ul.nav.nav-list
@@ -9,4 +9,4 @@ a.children.collapsed.folder id="folder_#{parent_folder.id}" href="#" data-toggle
           == view.render(partial: 'folder', locals: { parent_folder: folder } )
         - else
           a.folder id="folder_#{folder.id}" href="#"
-            == folder_with_icon folder.id
+            == folder_with_icon folder.id, :prefix

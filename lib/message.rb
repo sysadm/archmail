@@ -14,7 +14,7 @@ class Message < ActiveRecord::Base
     @env.imap_connect unless @env.imap
     @env.imap.select(folder.imap_name)
     queue = @env.imap.search(['ALL'])
-    p "Fetch headers for #{queue.count} message(s)"
+    puts "Fetch headers for #{queue.count} message(s)"
     queue.each{|seqno| fetch_message_headers(folder, seqno); ".".print_and_flush }
     puts " done"
   end
@@ -22,7 +22,7 @@ class Message < ActiveRecord::Base
   def create_messages_tree_in_folder(folder)
     @env.imap_connect unless @env.imap
     @env.imap.select(folder.imap_name)
-    p "Create message tree in folder #{folder.name}"
+    puts "Create message tree in folder #{folder.name}"
     threaded_list=@env.imap.thread("REFERENCES", 'ALL', 'UTF-8')
     threaded_list.each do |thread_member|
       if thread_member.children.count > 0
@@ -85,6 +85,25 @@ class Message < ActiveRecord::Base
     @mail = Mail.read_from_string data.attr["RFC822"]
     file = ([@env.arch_path] + message.folder.ancestry_path).join('/') + "/#{message.id}.html"
     header = message.rfc_header.rfc_to_html
+
+    unless @mail.attachments.empty?
+      message.update_attribute(:has_attachment, true)
+      path = FileUtils.mkdir_p(([@env.arch_path] + message.folder.ancestry_path + [message.id]).join('/'))[0] + "/"
+      @mail.attachments.each_with_index do | attachment, index |
+        content_type = attachment.content_type.split(";")[0]
+        original_filename = attachment.filename.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "")
+        content_type == "message/rfc822" ? extension = "eml" : extension = original_filename.split('.').last
+        filename = "#{message.id}_#{index}.#{extension}"
+        begin
+          attach = File.open(path + filename, "w+b", 0644) {|f| f.write attachment.body.decoded}
+          Attachment.create(message: message, filename: filename, original_filename: original_filename,
+                            content_type: content_type, size: attach) if attach
+        rescue => e
+          puts "Unable to save data for #{filename} because #{e.message}"
+        end
+      end
+    end
+
     if @mail.html_part
       begin
         body = @mail.html_part.decoded.to_utf8(@mail.text_part.charset)
@@ -106,30 +125,33 @@ class Message < ActiveRecord::Base
         if @mail.body.multipart?
           @content = []
           extract_inline_messages_from_multipart_mail(@mail)
-          body = @content.join('==<br />')
+          @body = @content.join('==<br />')
         else
-          body = @mail.body.decoded.to_utf8(@mail.charset).body_to_html
+          if @mail.body.encoding == "base64"
+            content_type = "#{@mail.main_type}/#{@mail.sub_type}"
+            original_filename = @mail.content_type_parameters[:name].to_s.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "")
+            content_type == "message/rfc822" ? extension = "eml" : extension = original_filename.split('.').last
+            path = FileUtils.mkdir_p(([@env.arch_path] + message.folder.ancestry_path + [message.id]).join('/'))[0] + "/"
+            filename = "#{message.id}_0.#{extension}"
+            binary_body = @mail.body.decoded.force_encoding("UTF-8")
+            attach = File.open(path + filename, "w+b", 0644) {|f| f.write binary_body}
+            if attach
+              Attachment.create(message: message, filename: filename, original_filename: original_filename,
+                                content_type: content_type, size: attach)
+              message.update_attribute(:has_attachment, true)
+            end
+            @body = "<h4>This email include only mime64 encoded file, it was saved like an attachment.</h4>"
+          else
+            @body = @mail.body.decoded.to_utf8(@mail.charset).body_to_html
+          end
+          html = @view.render(template: 'message', locals: { rfc_header: header, body: @body, message: message } )
+          File.open(file, "w+b", 0644) {|f| f.write html}
         end
-        html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
-        File.open(file, "w+b", 0644) {|f| f.write html}
       rescue => e
         puts "Unable to save data for #{file} because #{e.message}"
       end
     end
-    unless @mail.attachments.empty?
-      message.update_attribute(:has_attachment, true)
-      path = FileUtils.mkdir_p(([@env.arch_path] + message.folder.ancestry_path + [message.id]).join('/'))[0] + "/"
-      @mail.attachments.each_with_index do | attachment, index |
-        content_type = attachment.content_type.split(";")[0]
-        content_type == "message/rfc822" ? filename = "attach_#{index}.eml" : filename = attachment.filename
-        begin
-          file = File.open(path + filename, "w+b", 0644) {|f| f.write attachment.body.decoded}
-          Attachment.create(message: message, filename: filename, content_type: content_type, size: file) if file
-        rescue => e
-          puts "Unable to save data for #{filename} because #{e.message}"
-        end
-      end
-    end
+
     message.update_attribute(:export_complete, true)
   end
 

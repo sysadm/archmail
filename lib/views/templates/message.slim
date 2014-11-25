@@ -5,6 +5,8 @@ body
     h3
       i.fa.fa-envelope
       = message.subject
+    h4
+      'id: #{message.id}
   .message_header
     p
       'From:
@@ -28,10 +30,11 @@ body
     hr
   .message_body
     #rfc
-      == rfc_header
+      == message.rfc_header
       hr
     - if message.has_attachment?
       #attachments
         == view.render(partial: 'attachments', locals: { attachments: message.attachments })
+        hr
     #content
       == body

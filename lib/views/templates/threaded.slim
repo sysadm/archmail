@@ -12,13 +12,15 @@
           ',  Time interval: [#{time_range.first.to_s} .. #{time_range.last.to_s}]
     .message_list
       ul
-        - folder.messages.each_with_index do |message, idx|
-          - idx.odd? ? odd = "odd" : odd = ""
-          li class="#{odd}"
+        - messages.each_with_index do |message, idx|
+          li class="#{oddclass}"
             a.message id="#{message.id}.html" href="#"
               - message.subject = "no subject" if message.subject.nil? or message.subject.empty?
               '#{message.subject.truncate(60)} #{message.from}
-            i  #{message.created_at.to_s}
+              i  #{message.created_at.to_s}
+          - if message.children.count > 0
+            ul.nested
+              == view.render(partial: 'message', locals: { parent_message: message } )
 #frame_message_div
   br
   a.back

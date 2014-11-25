@@ -24,7 +24,8 @@ class InitSchema < ActiveRecord::Migration
       t.timestamps
     end
     create_table :attachments do |t|
-      t.text  :filename
+      t.text  :original_filename
+      t.string  :filename
       t.string  :content_type
       t.integer :size
       t.belongs_to :message

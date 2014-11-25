@@ -1,4 +1,6 @@
 module ActionView::Helpers::TextHelper
+  @@counter ||= 0
+
   def current_user
     env = Env.new
     env.user
@@ -13,10 +15,10 @@ module ActionView::Helpers::TextHelper
     Class.new(ActionView::Base).new("lib/views/templates")
   end
 
-  def folder_with_icon(id)
+  def folder_with_icon(id, with_prefix=false)
     folder = Folder.find id
     name = folder.name
-    prefix = "-"*folder.ancestors.count
+    with_prefix ? prefix = "-"*folder.ancestors.count : prefix = ""
     case name
       when /trash|delete/i
         "#{prefix} <i class='fa fa-trash'></i>#{name}"
@@ -29,5 +31,12 @@ module ActionView::Helpers::TextHelper
       else
         "#{prefix} <i class='fa fa-folder'></i>#{name}"
     end
+  end
+
+  def oddclass(counter=nil)
+    @@counter = counter if counter
+    @@counter.odd? ? oddclass="odd" : oddclass="even"
+    @@counter += 1
+    oddclass
   end
 end
