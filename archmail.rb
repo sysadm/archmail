@@ -13,7 +13,9 @@ class Archmail
   def backup
     clean_up
     @folder = Folder.new
+    puts "Create folder structure..."
     @folder.create_root_structure
+    puts "done"
     @message = Message.new
     Folder.all.each do |folder|
       puts "Folder: #{folder.id} - #{folder.imap_name}"
