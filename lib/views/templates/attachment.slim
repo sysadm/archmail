@@ -1,25 +1,26 @@
-== view.render(partial: 'frame_header')
-body
-  .page-header
-    h3
-      i.fa.fa-info
-      |  About archmail
-  p
-    'Archmail is a small software to archive your imap mailbox. It was created for internal purpose of
-    a href="http://www.multitel.be/" target="_blank" Multitel A.S.B.L.
-    '  (non-profit organisation) by Jerzy Sładkowski to have imap mailbox backup, absolutely independent from any servers.
-    The idea was to create a folder with html files (each email in a separate html) and attachments.
-    '  In addition, it should have been created html indexes to have ordered in specific way lists of emails (threaded,
-    by date, subject, author or only with attachments). Folder with that backup can be burn, for example on DVD.
-    '  And for access to your backup you have to use browser only. That was a main idea.
-  p
-    'The author was inspired by the
-    a href="http://www.hypermail-project.org/" target="_blank" hypermail
-    '. Ok, hypermail can create mailists, but only from unix mbox,
-    it can't use IMAP with multiple folders that can also be nested.
-  p During the work somehow came out that was quite an interesting application that generate html visually pleasing.
-    At least, so it seems for the author :)
-  p Since this is a completely free software under BSD license - feel free to contribute, improve or give me
-    constructive criticism. Your pull request will be pleasantly welcome.
-  p Thanks a lot for using!
-  h4 Author
+- shift = "../" * (folder.ancestor_ids.count + 1)
+#frame_maillist_div
+  == view.render(partial: 'frame_header', locals: { shift: shift })
+  body
+    .page-header
+      h3
+        == folder_with_icon(folder.id)
+        '  folder, emails with attachments
+      h4.left_margin
+        '  Messages: #{messages.count} , Size: #{number_to_human_size(messages.sum(:size), precision: 3)}
+        - if time_range
+          ',  Time interval: [#{time_range.first.to_s} .. #{time_range.last.to_s}]
+    .message_list
+      ul
+        - messages.each_with_index do |message, idx|
+          - idx.odd? ? odd = "odd" : odd = ""
+          li class="#{odd}"
+            a.message id="#{message.id}.html" href="#"
+              - message.subject = "no subject" if message.subject.nil? or message.subject.empty?
+              '#{message.subject.truncate(60)} #{message.from}
+            i  #{message.created_at.to_s}
+#frame_message_div
+  br
+  a.back
+    i.fa.fa-caret-left  back
+  iframe#framemessage src="" seamless="seamless" scrolling="auto"

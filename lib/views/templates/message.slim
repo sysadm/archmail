@@ -1,4 +1,5 @@
-== view.render(partial: 'frame_header')
+- shift = "../" * (message.folder.ancestor_ids.count + 1)
+== view.render(partial: 'frame_header', locals: { shift: shift })
 body
   .page-header
     h3

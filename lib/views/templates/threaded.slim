@@ -1,14 +1,26 @@
-== view.render(partial: 'frame_header')
-body
-  .page-header
-    h3
-      == folder_with_icon(folder.id)
-      '  folder, threaded maillist
-    h4.left_margin
-      '  Messages: #{folder.messages.count}, Size: #{folder.messages.sum(:size)}
-  .message_list
-    ul
-      - folder.messages.each_with_index do |message, idx|
-        - idx.odd? ? odd = "odd" : odd = ""
-        li class="#{odd}"
-          = message.subject
+- shift = "../" * (folder.ancestor_ids.count + 1)
+#frame_maillist_div
+  == view.render(partial: 'frame_header', locals: { shift: shift })
+  body
+    .page-header
+      h3
+        == folder_with_icon(folder.id)
+        '  folder, threaded maillist
+      h4.left_margin
+        '  Messages: #{folder.messages.count} , Size: #{number_to_human_size(folder.messages.sum(:size), precision: 3)}
+        - if time_range
+          ',  Time interval: [#{time_range.first.to_s} .. #{time_range.last.to_s}]
+    .message_list
+      ul
+        - folder.messages.each_with_index do |message, idx|
+          - idx.odd? ? odd = "odd" : odd = ""
+          li class="#{odd}"
+            a.message id="#{message.id}.html" href="#"
+              - message.subject = "no subject" if message.subject.nil? or message.subject.empty?
+              '#{message.subject.truncate(60)} #{message.from}
+            i  #{message.created_at.to_s}
+#frame_message_div
+  br
+  a.back
+    i.fa.fa-caret-left  back
+  iframe#framemessage src="" seamless="seamless" scrolling="auto"

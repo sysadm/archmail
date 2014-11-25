@@ -5,3 +5,4 @@ example
 config.yml
 sladkowski_*
 .lock-*
+lib/views/assets/js/pathes.js

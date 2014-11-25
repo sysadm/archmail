@@ -9,12 +9,9 @@ p {
 }
 a {
     font-size: 14px;
-    font-weight: bold;
     color: #777777;
 }
 a:hover {
-    font-size: 14px;
-    font-weight: bold;
     color: #d4145a;
     text-decoration: none;
 }
@@ -38,12 +35,15 @@ ul {
 #hide_attachments {
     display: none;
 }
-.message_header a {
-    font-weight: normal;
-}
 .left_margin {
     margin-left: 28px;
 }
 .odd {
     background-color: #f8f8f8;
+}
+.back {
+    font-size: 24px;
+}
+#frame_message_div {
+    display: none;
 }

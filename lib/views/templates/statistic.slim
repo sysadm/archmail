@@ -20,3 +20,6 @@ body
   p
     'Number of messages:
     b = Message.count
+  p
+    'Size:
+    b = number_to_human_size(Message.sum(:size), precision: 3)

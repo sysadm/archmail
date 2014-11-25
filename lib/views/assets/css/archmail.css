@@ -174,8 +174,6 @@ body{
     color: #777777;
     padding-top: 20px;
     text-align: center;
-    background-image: url('assets/images/background.gif');
-    z-index: 9999;
 }
 .indexmenu a {
     color: #777777;
