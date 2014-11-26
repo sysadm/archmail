@@ -47,6 +47,11 @@ Dir.glob("./lib/db/migrations/*.rb").each do |file|
   require file
 end
 
+VERSION = "1.0 beta"
+ENV['ARCHMAIL_ENV'] ? ENVIRONMENT = ENV['ARCHMAIL_ENV'] : ENVIRONMENT = "production"
+
+@options = CmdLineParser.parse(ARGV)
+
 class Env
   attr_accessor :user, :pass, :server, :arch_path, :imap
   def initialize
@@ -66,4 +71,9 @@ def define_context
   @view = Class.new(ActionView::Base).new("lib/views/templates")
   @env = Env.new
   @user = @env.user
+end
+
+def logger(message)
+  puts message if @options.verbose
+  File.open(@options.logfile, "a+b", 0644) {|f| f.write message} if @options.logfile
 end

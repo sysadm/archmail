@@ -32,8 +32,10 @@ class String
     self.gsub!("\n", "<br />")
   end
 
-  def print_and_flush
-    print self
-    $stdout.flush
+  def print_and_flush(verbose=nil)
+    if verbose
+      print self
+      $stdout.flush
+    end
   end
 end

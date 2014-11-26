@@ -14,15 +14,15 @@ class Message < ActiveRecord::Base
     @env.imap_connect unless @env.imap
     @env.imap.select(folder.imap_name)
     queue = @env.imap.search(['ALL'])
-    puts "Fetch headers for #{queue.count} message(s)"
-    queue.each{|seqno| fetch_message_headers(folder, seqno); ".".print_and_flush }
-    puts " done"
+    logger "Fetch headers for #{queue.count} message(s)"
+    queue.each{|seqno| fetch_message_headers(folder, seqno); ".".print_and_flush(@options.verbose) }
+    logger " done"
   end
 
   def create_messages_tree_in_folder(folder)
     @env.imap_connect unless @env.imap
     @env.imap.select(folder.imap_name)
-    puts "Create message tree in folder #{folder.name}"
+    logger "Create message tree in folder #{folder.name}"
     threaded_list=@env.imap.thread("REFERENCES", 'ALL', 'UTF-8')
     threaded_list.each do |thread_member|
       if thread_member.children.count > 0
@@ -99,7 +99,7 @@ class Message < ActiveRecord::Base
           Attachment.create(message: message, filename: filename, original_filename: original_filename,
                             content_type: content_type, size: attach) if attach
         rescue => e
-          puts "Unable to save data for #{filename} because #{e.message}"
+          logger "Unable to save data for #{filename} because #{e.message}"
         end
       end
     end
@@ -110,7 +110,7 @@ class Message < ActiveRecord::Base
         html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
         File.open(file, "w+b", 0644) {|f| f.write html}
       rescue => e
-        puts "Unable to save data for #{file} because #{e.message}"
+        logger "Unable to save data for #{file} because #{e.message}"
       end
     elsif @mail.text_part and @mail.text_part.body.decoded.size > 0
       begin
@@ -118,7 +118,7 @@ class Message < ActiveRecord::Base
         html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
         File.open(file, "w+b", 0644) {|f| f.write html}
       rescue => e
-        puts "Unable to save data for #{file} because #{e.message}"
+        logger "Unable to save data for #{file} because #{e.message}"
       end
     else
       begin
@@ -148,7 +148,7 @@ class Message < ActiveRecord::Base
           File.open(file, "w+b", 0644) {|f| f.write html}
         end
       rescue => e
-        puts "Unable to save data for #{file} because #{e.message}"
+        logger "Unable to save data for #{file} because #{e.message}"
       end
     end
 
