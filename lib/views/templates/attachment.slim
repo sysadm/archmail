@@ -18,7 +18,11 @@
             a.message id="#{message.id}.html" href="#"
               - message.subject = "no subject" if message.subject.nil? or message.subject.empty?
               '#{message.subject.truncate(60)} #{message.from}
-            i  #{message.created_at.to_s}
+              i  #{message.created_at.to_s}
+            - if message.has_attachment?
+              |&nbsp;&nbsp;&nbsp;
+              - message.attachments.each do |attachment|
+                == attachment_icon_for_ordered_list attachment.content_type
 #frame_message_div
   br
   a.back

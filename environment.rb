@@ -12,6 +12,7 @@ require 'mail'
 require 'fileutils'
 require_relative 'lib/mime_type'
 require 'slim'
+require 'pp'
 
 silence_warnings do
   OpenSSL::SSL.const_set(:VERIFY_PEER, OpenSSL::SSL::VERIFY_NONE)

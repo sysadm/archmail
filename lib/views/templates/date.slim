@@ -5,7 +5,7 @@
     .page-header
       h3
         == folder_with_icon(folder.id)
-        '  folder, mail order by date
+        '  folder, mail order by date (recent first)
       h4.left_margin
         '  Messages: #{messages.count} , Size: #{number_to_human_size(messages.sum(:size), precision: 3)}
         - if time_range
@@ -18,7 +18,7 @@
             a.message id="#{message.id}.html" href="#"
               - message.subject = "no subject" if message.subject.nil? or message.subject.empty?
               '#{message.subject.truncate(60)} #{message.from}
-            i  #{message.created_at.to_s}
+              i  #{message.created_at.to_s}
 #frame_message_div
   br
   a.back

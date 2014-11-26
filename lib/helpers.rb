@@ -41,20 +41,53 @@ module ActionView::Helpers::TextHelper
         '<i class="fa fa-file-excel-o fa-2x"></i>'
       when /powerpoint/i
         '<i class="fa fa-file-powerpoint-o fa-2x"></i>'
-      when /x-tar|zip/i
-        '<i class="fa fa-file-archive-o fa-2x"></i>'
       when /pdf/i
         '<i class="fa fa-file-pdf-o fa-2x"></i>'
+      when /rfc822/i
+        '<i class="fa fa-envelope-o fa-2x"></i>'
+      when /javascript|xml|json/i
+        '<i class="fa fa-file-code-o fa-2x"></i>'
+      when /x-tar|zip|arj|rar/i
+        '<i class="fa fa-file-archive-o fa-2x"></i>'
       when /text/i
         '<i class="fa fa-file-text-o fa-2x"></i>'
-      when /rfc822/i
-        '<i class="fa fa-file-code-o fa-2x"></i>'
       when /image/i
         '<i class="fa fa-file-image-o fa-2x"></i>'
-      when /audio/i
+      when /audio|ogg/i
         '<i class="fa fa-file-audio-o fa-2x"></i>'
+      when /video/i
+        '<i class="fa fa-file-movie-o fa-2x"></i>'
       else
         '<i class="fa fa-file fa-2x"></i>'
+    end
+  end
+
+  def attachment_icon_for_ordered_list(type)
+    case type
+      when /word/i
+        '<a href="#" title="Word document"><i class="fa fa-file-word-o"></i></a>'
+      when /excel/i
+        '<a href="#" title="Excel document"><i class="fa fa-file-excel-o"></i></a>'
+      when /powerpoint/i
+        '<a href="#" title="Powerpoint document"><i class="fa fa-file-powerpoint-o"></i></a>'
+      when /pdf/i
+        '<a href="#" title="PDF document"><i class="fa fa-file-pdf-o"></i></a>'
+      when /rfc822/i
+        '<a href="#" title="EML file"><i class="fa fa-envelope-o"></i></a>'
+      when /javascript|xml|json/i
+        '<a href="#" title="Source code"><i class="fa fa-file-code-o"></i></a>'
+      when /x-tar|zip|arj|rar/i
+        '<a href="#" title="Archive"><i class="fa fa-file-archive-o"></i></a>'
+      when /text/i
+        '<a href="#" title="Text document"><i class="fa fa-file-text-o"></i></a>'
+      when /image/i
+        '<a href="#" title="Image"><i class="fa fa-file-image-o"></i></a>'
+      when /audio|ogg/i
+        '<a href="#" title="Audio file"><i class="fa fa-file-audio-o"></i></a>'
+      when /video|flash/i
+        '<a href="#" title="Video file"><i class="fa fa-file-movie-o"></i></a>'
+      else
+        '<a href="#" title="Unknown type"><i class="fa fa-file"></i></a>'
     end
   end
 
