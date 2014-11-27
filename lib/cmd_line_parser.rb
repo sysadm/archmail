@@ -9,7 +9,7 @@ class CmdLineParser
     options = OpenStruct.new
     options.folders = :all
     options.verbose = true
-    options.continue = true
+    options.continue = false
     options.unknown = true
 
     opt_parser = OptionParser.new do |opts|
@@ -63,7 +63,13 @@ class CmdLineParser
       # Another typical switch to print the version.
       opts.on_tail("-v", "--version", "Show version") do
         options.unknown = false
+        git = %x{which git}.chomp
+        if File.exist? git and File.directory? ".git"
+          last_commit = %x{#{git} log -1| head -n 3}.split('\n')
+          last_commit[0] = last_commit[0].sub('commit', 'Last commit:')
+        end
         puts "Arcmail is #{VERSION}"
+        last_commit.each{|string| puts string} if last_commit
         exit
       end
 

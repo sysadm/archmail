@@ -49,8 +49,7 @@ end
 
 VERSION = "1.0 beta"
 ENV['ARCHMAIL_ENV'] ? ENVIRONMENT = ENV['ARCHMAIL_ENV'] : ENVIRONMENT = "production"
-
-@options = CmdLineParser.parse(ARGV)
+CMD_LINE_OPTIONS = CmdLineParser.parse(ARGV)
 
 class Env
   attr_accessor :user, :pass, :server, :arch_path, :imap
@@ -59,7 +58,7 @@ class Env
     @pass = CONFIG['password']
     @server = CONFIG['server']
     @port = CONFIG['port']
-    @arch_path = "#{@user}_#{Date.today.to_s}"
+    @arch_path = State.arch_path
   end
   def imap_connect
     @imap = Net::IMAP.new(@server, @port, :ssl => { :verify_mode => OpenSSL::SSL::VERIFY_NONE })
@@ -73,7 +72,27 @@ def define_context
   @user = @env.user
 end
 
-def logger(message)
-  puts message if @options.verbose
-  File.open(@options.logfile, "a+b", 0644) {|f| f.write message} if @options.logfile
+def define_backup_path
+  @state = State.open
+  arch_path = "#{CONFIG['login']}_#{Date.today.to_s}"
+  if CMD_LINE_OPTIONS.continue == false and File.directory? arch_path
+    puts "You want to do new backup of imap server, but folder #{arch_path} already exist."
+    puts "If you really want to erase it, type YES:"
+    confirmation = gets.chomp
+    if confirmation.downcase == "yes"
+      @state.arch_path = arch_path
+      @state.save
+    else
+      puts "No confirmation to delete folder #{arch_path}"
+      exit 1
+    end
+  elsif @state.arch_path.nil?
+    @state.arch_path = arch_path
+    @state.save
+  end
+end
+
+def arch_logger(message)
+  puts message if CMD_LINE_OPTIONS.verbose
+  File.open(CMD_LINE_OPTIONS.logfile, "a+b", 0644) {|f| f.write message} if CMD_LINE_OPTIONS.logfile
 end

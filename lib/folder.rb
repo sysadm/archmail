@@ -32,4 +32,12 @@ class Folder < ActiveRecord::Base
     }
   end
 
+  def clean_up_except_folder
+    folders_to_save = self.self_and_ancestors
+    folders_to_clean = Folder.all - folders_to_save
+    folders_to_clean.each do |folder|
+      FileUtils.rm_rf ([@env.arch_path] + folder.ancestry_path).join('/')
+      folder.destroy
+    end
+  end
 end

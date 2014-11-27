@@ -199,3 +199,5 @@ iframe {
     /* not used, 'cause of bug in google chrome. In the future probably it will be preferred way */
     /*height: 100%;*/
 }
+.license a { font-weight: bold; }
+.license a:hover { font-weight: bold; }
