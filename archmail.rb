@@ -26,6 +26,7 @@ class Archmail
     end
     save_messages
     create_html_indexes
+    clean = %x{rm -f ./.lock-ClosureTree*}
   end
 
   def create_message_structure
