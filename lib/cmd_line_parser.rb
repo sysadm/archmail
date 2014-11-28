@@ -8,6 +8,7 @@ class CmdLineParser
     # We set default values here.
     options = OpenStruct.new
     options.folders = :all
+    options.recursive = true
     options.verbose = true
     options.continue = false
     options.unknown = true
@@ -27,6 +28,12 @@ class CmdLineParser
         options.unknown = false
         options.folders = :specific
         options.folder = folder.split('/').join('.')
+      end
+
+      # Boolean switch.
+      opts.on("-r", "--[no-]recursive", "Backup specific folder with subfolders (default) or without") do |r|
+        options.unknown = false
+        options.recursive = r
       end
 
       opts.on("-c", "--continue", "Don't clean database, continue backup for all unsaved messages") do

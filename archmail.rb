@@ -39,12 +39,15 @@ class Archmail
       @state.message_structure_complete = true
       @state.save
     else
-      folder = Folder.find_by(imap_name: @options.folder)
-      if folder
-        arch_logger "Folder: #{folder.id} - #{folder.imap_name}"
-        @message.fetch_all_headers(folder)
-        @message.create_messages_tree_in_folder(folder)
-        folder.clean_up_except_folder
+      backup_folder = Folder.find_by(imap_name: @options.folder)
+      if backup_folder
+        CMD_LINE_OPTIONS.recursive ? @folders = backup_folder.self_and_descendants : @folders = [backup_folder]
+        @folders.each do |folder|
+          arch_logger "Folder: #{folder.id} - #{folder.imap_name}"
+          @message.fetch_all_headers(folder)
+          @message.create_messages_tree_in_folder(folder)
+        end
+        backup_folder.except_clean_up CMD_LINE_OPTIONS.recursive
         @state.message_structure_complete = true
         @state.save
       else
