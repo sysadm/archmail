@@ -12,8 +12,8 @@ can't use IMAP with multiple folders that can also be nested.
 During the work somehow came out that was quite an interesting application that generate html visually pleasing.
 At least, so it seems for the author :)
 
-Since this is a completely free software under BSD license - feel free to contribute, improve or give me constructive criticism.
-Your pull request will be pleasantly welcome.
+Since this is a completely free software under GPL license - feel free to contribute, improve its source code or give me constructive criticism.
+Your git pull request will be pleasantly welcome.
 
 Thanks a lot for using!
 Author

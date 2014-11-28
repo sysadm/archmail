@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby -W0
+#!/usr/bin/env ruby
 require './environment'
 
 class Archmail
@@ -13,7 +13,6 @@ class Archmail
 
   def run
     define_context
-    define_backup_path
     if @options.continue
       create_folder_structure unless @state.folder_structure_complete
       @message = Message.new
@@ -26,7 +25,8 @@ class Archmail
     end
     save_messages
     create_html_indexes
-    clean = %x{rm -f ./.lock-ClosureTree*}
+    %x{rm -f ./.lock-ClosureTree*}
+    exit 0
   end
 
   def create_message_structure
@@ -55,7 +55,8 @@ class Archmail
   end
 
   def create_message_structure_continue
-
+    puts "Function not implemented yet"
+    exit 0
   end
 
   def create_folder_structure
@@ -68,9 +69,9 @@ class Archmail
   end
 
   def save_messages
-    messages = Message.where(export_complete: false)
+    CMD_LINE_OPTIONS.continue ? messages = Message.where(export_complete: false) : messages = Message.all
     arch_logger "Fetch and save #{messages.count} message(s)"
-    messages.each{|m| @message.backup(m); ".".print_and_flush }
+    messages.each{|m| @message.backup(m); ".".print_and_flush(CMD_LINE_OPTIONS.verbose) }
     arch_logger " done"
   end
 
