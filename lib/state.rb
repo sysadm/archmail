@@ -1,6 +1,15 @@
 class State < OpenStruct
   def self.open
-    @state = YAML.load_file("./state.yml")
+    begin
+      @state = YAML.load_file("./state.yml")
+    rescue
+      if ENVIRONMENT == "development"
+        puts "Remember, that you haven't ./state.yml yet."
+      else
+        puts "Can't load ./state.yml"
+        exit 1
+      end
+    end
   end
 
   def save
