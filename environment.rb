@@ -52,7 +52,8 @@ def create_config
   if config[:gmail]
     config[:server] = "imap.gmail.com"
     config[:port] = 993
-    config[:tls_ssl] = true
+    config[:ssl] = true
+    config[:ssl_cert_verify] = true
     "Your full Gmail address (e.g. \"me@gmail.com\"): ".print_and_flush(true)
     config[:login] = gets.chomp
   else
@@ -62,7 +63,12 @@ def create_config
     config[:port] = gets.chomp.to_i
     "TLS/SSL required (Y/n)? ".print_and_flush(true)
     input = gets.chomp
-    input.downcase == "n" ? config[:tls_ssl] = false : config[:tls_ssl] = true
+    input.downcase == "n" ? config[:ssl] = false : config[:ssl] = true
+    if config[:ssl]
+      "Verify SSL certificate (y/N)? ".print_and_flush(true)
+      input = gets.chomp
+      input.downcase == "y" ? config[:ssl_cert_verify] = true : config[:ssl_cert_verify] = false
+    end
     "Your login: ".print_and_flush(true)
     config[:login] = gets.chomp
   end
@@ -71,12 +77,10 @@ def create_config
 
   begin
     File.open("config.yml", "w+b", 0644) {|f| f.write config.to_yaml}
-    puts ""
-    puts "Config created. Now you can backup your imap mailbox."
+    puts "\nConfig created. Now you can backup your imap mailbox."
     exit 0
   rescue => e
-    puts ""
-    puts "Can't save config, 'cause you probably don't have write permission: #{e.message}"
+    puts "\nCan't save config, 'cause you probably don't have write permission: #{e.message}"
     exit 1
   end
 end
@@ -101,12 +105,14 @@ class Env
     @server = CONFIG[:server]
     @port = CONFIG[:port]
     @arch_path = State.open.arch_path
+    CONFIG[:ssl_cert_verify] ? verify = OpenSSL::SSL::VERIFY_PEER : verify = OpenSSL::SSL::VERIFY_NONE
+    CONFIG[:ssl] ? @ssl = {ssl: { verify_mode: verify } } : @ssl = false
   end
 
   def imap_connect
     begin
-      @imap = Net::IMAP.new(@server, @port, :ssl => { :verify_mode => OpenSSL::SSL::VERIFY_NONE })
-      @imap.authenticate('login', @user, @pass)
+      @imap = Net::IMAP.new(@server, @port, @ssl)
+      @imap.login(@user, @pass)
     rescue => e
       puts "Can't login to IMAP server: #{e.message}"
       puts "Check your config.yml first."
