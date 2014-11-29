@@ -14,7 +14,12 @@
         'Size:
         b = number_to_human_size(attachment.size, precision: 3)
     td
-      a href="#{attachment.message.id}/#{attachment.filename}"
-        i.fa.fa-eye.fa-2x
-        br open
+      - if attachment.content_type.include? "image"
+        a href="#{attachment.message.id}/#{attachment.filename}" data-lightbox="#{attachment.message.subject}"
+          i.fa.fa-eye.fa-2x
+          br open
+      - else
+        a href="#{attachment.message.id}/#{attachment.filename}"
+          i.fa.fa-eye.fa-2x
+          br open
 </table>
