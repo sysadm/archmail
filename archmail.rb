@@ -81,7 +81,7 @@ class Archmail
 
   def clean_all
     File.open("./lib/db/mailbox.db", "w+b", 0644) {|f| f.write ''}
-    FileUtils.rm_rf @env.arch_path
+    %x{rm -rf \"#{@env.arch_path}\"}
     Db.migrate :up
   end
 
@@ -115,8 +115,8 @@ class Archmail
           message_info(err.message)
         end
       end
-      arch_logger "Amount of unsaved messages: #{messages} (#{sprintf( "%0.03f", messages.to_f/Message.count)}%)" if messages > 0
-      arch_logger "Amount of unsaved attachments: #{attachments} (#{sprintf( "%0.03f", attachments.to_f/Attachment.count)}%)" if attachments > 0
+      arch_logger "Amount of unsaved messages: #{messages} (#{sprintf( "%0.03f", messages.to_f/Message.count*100)}%)" if messages > 0
+      arch_logger "Amount of unsaved attachments: #{attachments} (#{sprintf( "%0.03f", attachments.to_f/Attachment.count*100)}%)" if attachments > 0
     end
     errors.empty? ? 0 : 1
   end

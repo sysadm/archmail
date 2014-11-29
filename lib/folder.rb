@@ -11,11 +11,11 @@ class Folder < ActiveRecord::Base
   def create_root_structure
     @env.imap_connect
     Dir.mkdir @env.arch_path
-    FileUtils.cp_r "lib/views/assets", "#{@env.arch_path}"
+    %x{cp -r lib/views/assets \"#{@env.arch_path}\" }
     mailboxes = @env.imap.list("", "%").to_a
     mailboxes.each{|mailbox|
       folder = Folder.find_or_create_by(name: mailbox.name, imap_name: mailbox.name)
-      FileUtils.mkdir_p "#{@env.arch_path}/#{folder.name}"
+      %x{mkdir -p \"#{@env.arch_path}/#{folder.name}\" }
       if mailbox.attr.include? :Haschildren
         create_subfolder_tree folder
       end
@@ -27,7 +27,7 @@ class Folder < ActiveRecord::Base
     mailboxes.each{|mailbox|
       name = mailbox.name.gsub("#{folder.imap_name}.", "")
       subfolder = folder.children.create(name: name, imap_name: mailbox.name)
-      FileUtils.mkdir_p ([@env.arch_path] + subfolder.ancestry_path).join('/')
+      %x{mkdir -p \"#{([@env.arch_path] + subfolder.ancestry_path).join('/')}\" }
       create_subfolder_tree subfolder if mailbox.attr.include? :Haschildren
     }
   end
@@ -40,7 +40,7 @@ class Folder < ActiveRecord::Base
     end
     folders_to_clean = Folder.all - folders_to_save
     folders_to_clean.each do |folder|
-      FileUtils.rm_rf ([@env.arch_path] + folder.ancestry_path).join('/')
+      %x{rm -rf \"#{([@env.arch_path] + folder.ancestry_path).join('/')}\" }
       folder.destroy
     end
   end

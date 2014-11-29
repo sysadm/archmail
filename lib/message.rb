@@ -88,7 +88,8 @@ class Message < ActiveRecord::Base
 
     unless @mail.attachments.empty?
       message.update_attribute(:has_attachment, true)
-      path = FileUtils.mkdir_p(([@env.arch_path] + message.folder.ancestry_path + [message.id]).join('/'))[0] + "/"
+      path = ([@env.arch_path] + message.folder.ancestry_path + [message.id]).join('/') + "/"
+      %x{mkdir -p \"#{path}\" }
       @mail.attachments.each_with_index do | attachment, index |
         content_type = attachment.content_type.split(";")[0]
         original_filename = attachment.filename.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "")
@@ -131,7 +132,8 @@ class Message < ActiveRecord::Base
             content_type = "#{@mail.main_type}/#{@mail.sub_type}"
             original_filename = @mail.content_type_parameters[:name].to_s.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "")
             content_type == "message/rfc822" ? extension = "eml" : extension = original_filename.split('.').last
-            path = FileUtils.mkdir_p(([@env.arch_path] + message.folder.ancestry_path + [message.id]).join('/'))[0] + "/"
+            path = ([@env.arch_path] + message.folder.ancestry_path + [message.id]).join('/') + "/"
+            %x{mkdir -p \"#{path}\" }
             filename = "#{message.id}_0.#{extension}"
             binary_body = @mail.body.decoded.force_encoding("UTF-8")
             attach = File.open(path + filename, "w+b", 0644) {|f| f.write binary_body}

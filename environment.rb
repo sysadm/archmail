@@ -1,5 +1,6 @@
 # environment.rb
 require 'rubygems'
+require 'io/console'
 require 'openssl'
 require 'net/imap'
 require 'active_record'
@@ -9,20 +10,12 @@ require 'action_pack'
 require 'action_view'
 require 'closure_tree'
 require 'mail'
-require 'fileutils'
 require_relative 'lib/mime_type'
 require 'slim'
 require 'pp'
 
 silence_warnings do
   OpenSSL::SSL.const_set(:VERIFY_PEER, OpenSSL::SSL::VERIFY_NONE)
-end
-
-begin
-  CONFIG ||= YAML.load_file("./config.yml")
-rescue => e
-  puts "Unable to load data from config, you must create it (or copy from config.yml.example and modify it with your own credentials and configuration of mail server)."
-  exit 1
 end
 
 I18n.enforce_available_locales = false
@@ -51,20 +44,74 @@ VERSION = "1.0 beta"
 ENV['ARCHMAIL_ENV'] ? ENVIRONMENT = ENV['ARCHMAIL_ENV'] : ENVIRONMENT = "production"
 CMD_LINE_OPTIONS = CmdLineParser.parse(ARGV)
 
+def create_config
+  config = {}
+  "Gmail account (y/N)? ".print_and_flush(true)
+  input = gets.chomp
+  input.downcase == "y" ? config[:gmail] = true : config[:gmail] = false
+  if config[:gmail]
+    config[:server] = "imap.gmail.com"
+    config[:port] = 993
+    config[:tls_ssl] = true
+    "Your full Gmail address (e.g. \"me@gmail.com\"): ".print_and_flush(true)
+    config[:login] = gets.chomp
+  else
+    "IMAP server hostname: ".print_and_flush(true)
+    config[:server] = gets.chomp
+    "port: ".print_and_flush(true)
+    config[:port] = gets.chomp.to_i
+    "TLS/SSL required (Y/n)? ".print_and_flush(true)
+    input = gets.chomp
+    input.downcase == "n" ? config[:tls_ssl] = false : config[:tls_ssl] = true
+    "Your login: ".print_and_flush(true)
+    config[:login] = gets.chomp
+  end
+  "Type your password (will be hidden): ".print_and_flush(true)
+  config[:password] = STDIN.noecho(&:gets).chomp
+
+  begin
+    File.open("config.yml", "w+b", 0644) {|f| f.write config.to_yaml}
+    puts ""
+    puts "Config created. Now you can backup your imap mailbox."
+    exit 0
+  rescue => e
+    puts ""
+    puts "Can't save config, 'cause you probably don't have write permission: #{e.message}"
+    exit 1
+  end
+end
+
+create_config if CMD_LINE_OPTIONS.interactive
+
+begin
+  CONFIG ||= YAML.load_file("./config.yml")
+rescue => e
+  puts "Unable to load data from config, you must create it (or copy from config.yml.example and modify it with your own credentials and configuration of mail server)."
+  puts "Eventually you can use option -i to create config interactively."
+  exit 1
+end
+
 ActiveRecord::Migration.verbose = CMD_LINE_OPTIONS.verbose
 
 class Env
   attr_accessor :user, :pass, :server, :arch_path, :imap
   def initialize
-    @user = CONFIG['login']
-    @pass = CONFIG['password']
-    @server = CONFIG['server']
-    @port = CONFIG['port']
+    @user = CONFIG[:login]
+    @pass = CONFIG[:password]
+    @server = CONFIG[:server]
+    @port = CONFIG[:port]
     @arch_path = State.open.arch_path
   end
+
   def imap_connect
-    @imap = Net::IMAP.new(@server, @port, :ssl => { :verify_mode => OpenSSL::SSL::VERIFY_NONE })
-    @imap.authenticate('login', @user, @pass)
+    begin
+      @imap = Net::IMAP.new(@server, @port, :ssl => { :verify_mode => OpenSSL::SSL::VERIFY_NONE })
+      @imap.authenticate('login', @user, @pass)
+    rescue => e
+      puts "Can't login to IMAP server: #{e.message}"
+      puts "Check your config.yml first."
+      exit 1
+    end
   end
 end
 
@@ -85,7 +132,7 @@ def define_backup_path
       exit 1
     end
   else # create new backup
-    arch_path = "#{CONFIG['login']}_#{Date.today.to_s}"
+    arch_path = "#{CONFIG[:login]}_#{Date.today.to_s}"
     if File.directory? arch_path # backup directory exist
       puts "You want to do new backup of imap server, but folder #{arch_path} already exist."
       puts "If you really want to erase it, type YES:"

@@ -11,6 +11,7 @@ class CmdLineParser
     options.recursive = true
     options.verbose = true
     options.continue = false
+    options.interactive = false
     options.unknown = true
 
     opt_parser = OptionParser.new do |opts|
@@ -18,6 +19,11 @@ class CmdLineParser
 
       opts.separator ""
       opts.separator "Specific options:"
+
+      opts.on("-i", "--interactive", "Create config in interactive mode") do
+        options.unknown = false
+        options.interactive = true
+      end
 
       opts.on("-a", "--all", "Backup all folders from imap server") do
         options.unknown = false
@@ -46,7 +52,7 @@ class CmdLineParser
         options.verbose = false
       end
 
-      opts.on("-l", "--log=LOGFILE", "Define logfile. Can be combined with silent mode.") do |log|
+      opts.on("-l", "--log=LOGFILE", "Define logfile. Can be combined with silent mode") do |log|
         options.unknown = false
         begin
           File.open(log, "a+b", 0644) {|f| f.write ""}
@@ -72,7 +78,7 @@ class CmdLineParser
         options.unknown = false
         git = %x{which git}.chomp
         if File.exist? git and File.directory? ".git"
-          last_commit = %x{#{git} log -1| head -n 3}.split('\n')
+          last_commit = %x{\"#{git}\" log -1| head -n 3}.split('\n')
           last_commit[0] = last_commit[0].sub('commit', 'Last commit:')
         end
         puts "Arcmail is #{VERSION}"

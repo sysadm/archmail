@@ -1,4 +1,14 @@
-server: imap.example.com
-port: 993
-login: "mylogin"
-password: "mypass"
+---
+:gmail: false
+:server: imap.example.com
+:port: 993
+:tls_ssl: true
+:login: mylogin
+:password: mypass
+
+#:gmail: true
+#:server: imap.gmail.com
+#:port: 993
+#:tls_ssl: true
+#:login: me@gmail.com
+#:password: mypass

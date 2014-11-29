@@ -142,9 +142,6 @@ body{
     .collapse ul.nav-list li a {
         color: #777777;
     }
-    .sidebar-nav .navbar li .logo {
-        background-color: #eeeeee;
-    }
     .sidebar-nav .navbar li a.children {
         color: #d4145a;
     }
@@ -162,9 +159,6 @@ body{
     .sidebar-nav .navbar li a:hover.children {
         background-color: #d4145a;
         color: white;
-    }
-    .sidebar-nav .navbar li a:hover.logo {
-        background-color: #eeeeee;
     }
 }
 #mobilelogo {
@@ -199,5 +193,7 @@ iframe {
     /* not used, 'cause of bug in google chrome. In the future probably it will be preferred way */
     /*height: 100%;*/
 }
-.license a { font-weight: bold; }
-.license a:hover { font-weight: bold; }
+
+#left_corner {  background-color: #e7e7e7; }
+.common_information a { font-weight: bold; }
+.common_information a:hover { font-weight: bold; }
