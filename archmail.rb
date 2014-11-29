@@ -25,8 +25,9 @@ class Archmail
     end
     save_messages
     create_html_indexes
+    err_code = self_checking
     %x{rm -f ./.lock-ClosureTree*}
-    exit 0
+    exit err_code
   end
 
   def create_message_structure
@@ -88,7 +89,44 @@ class Archmail
     arch_logger "Run html generators..."
     html_generator = HtmlGenerator.new
     html_generator.generate_all
-    arch_logger "Backup complete."
+    arch_logger "done"
+  end
+
+  def self_checking
+    errors, messages, attachments = [], 0, 0
+    Message.all.each { |message| errors << message unless File.exist? message.path }
+    Attachment.all.each { |attachment| errors << attachment unless File.exist? attachment.path }
+    if errors.empty?
+      arch_logger "Backup complete."
+    else
+      arch_logger "Backup complete, but #{errors.count} error(s) occured:"
+      errors.each do |err|
+        if err.class == Message
+          messages += 1
+          arch_logger "Message #{err.id} doesn't create:"
+          message_info(err)
+        elsif err.class == Attachment
+          attachments += 1
+          arch_logger "Attachment #{err.id} doesn't create:"
+          arch_logger "\t original filename: \'#{err.original_filename}\'"
+          arch_logger "\t content type: #{err.content_type}"
+          arch_logger "\t size: #{err.size}"
+          arch_logger "\t attachment belongs to message #{err.message.id}:"
+          message_info(err.message)
+        end
+      end
+      arch_logger "Amount of unsaved messages: #{messages} (#{sprintf( "%0.03f", messages.to_f/Message.count)}%)" if messages > 0
+      arch_logger "Amount of unsaved attachments: #{attachments} (#{sprintf( "%0.03f", attachments.to_f/Attachment.count)}%)" if attachments > 0
+    end
+    errors.empty? ? 0 : 1
+  end
+
+  def message_info(message)
+    arch_logger "\t folder: #{message.folder.imap_name.split('.').join('/')}"
+    arch_logger "\t subject: #{message.subject}"
+    arch_logger "\t date: #{message.created_at.to_s}"
+    arch_logger "\t from: #{message.from}"
+    arch_logger "\t size: #{message.size}"
   end
 
   def self.debug

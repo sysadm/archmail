@@ -168,4 +168,8 @@ class Message < ActiveRecord::Base
     end
   end
 
+  def path
+    folder = self.folder
+    ([@env.arch_path] + folder.ancestry_path).join('/') + "/#{self.id}.html"
+  end
 end
