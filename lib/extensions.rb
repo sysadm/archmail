@@ -43,6 +43,7 @@ end
 class Net::IMAP
   def gmail
     class << self.instance_variable_get("@parser")
+      # monkey patch from ruby 2.1.2 net/imap.rb
       def msg_att(n)
         match(T_LPAR)
         attr = {}
