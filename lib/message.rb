@@ -160,6 +160,15 @@ class Message < ActiveRecord::Base
       rescue => e
         arch_logger "Unable to save data for #{file} because #{e.message}"
       end
+    elsif @mail.text_part and @mail.text_part.body.decoded.size == 0
+      begin
+        message.has_attachment? ? attachments = " and attachment(s)" : attachments = ""
+        body = "<h4>This email include only empty text part#{attachments}.</h4>"
+        html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
+        File.open(file, "w+b", 0644) {|f| f.write html}
+      rescue => e
+        arch_logger "Unable to save data for #{file} because #{e.message}"
+      end
     else
       begin
         if @mail.body.multipart?
