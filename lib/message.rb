@@ -146,7 +146,7 @@ class Message < ActiveRecord::Base
 
     if @mail.html_part
       begin
-        body = @mail.html_part.decoded.to_utf8(@mail.html_part.charset)
+        body = @mail.html_part.decoded.to_utf8(@mail.html_part.charset.charset_alias)
         html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
         File.open(file, "w+b", 0644) {|f| f.write html}
       rescue => e
@@ -154,7 +154,7 @@ class Message < ActiveRecord::Base
       end
     elsif @mail.text_part and @mail.text_part.body.decoded.size > 0
       begin
-        body = @mail.text_part.decoded.to_utf8(@mail.text_part.charset).body_to_html
+        body = @mail.text_part.decoded.to_utf8(@mail.text_part.charset.charset_alias).body_to_html
         html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
         File.open(file, "w+b", 0644) {|f| f.write html}
       rescue => e
@@ -183,7 +183,7 @@ class Message < ActiveRecord::Base
             end
             @body = "<h4>This email include only mime64 encoded file, it was saved like an attachment.</h4>"
           else
-            @body = @mail.body.decoded.to_utf8(@mail.charset).body_to_html
+            @body = @mail.body.decoded.to_utf8(@mail.charset.charset_alias).body_to_html
           end
           html = @view.render(template: 'message', locals: { rfc_header: header, body: @body, message: message } )
           File.open(file, "w+b", 0644) {|f| f.write html}
