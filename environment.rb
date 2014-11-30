@@ -98,13 +98,14 @@ end
 ActiveRecord::Migration.verbose = CMD_LINE_OPTIONS.verbose
 
 class Env
-  attr_accessor :user, :pass, :server, :arch_path, :imap
+  attr_accessor :user, :pass, :server, :arch_path, :imap, :gmail
   def initialize
     @user = CONFIG[:login]
     @pass = CONFIG[:password]
     @server = CONFIG[:server]
     @port = CONFIG[:port]
     @arch_path = State.open.arch_path
+    @gmail = CONFIG[:gmail]
     CONFIG[:ssl_cert_verify] ? verify = OpenSSL::SSL::VERIFY_PEER : verify = OpenSSL::SSL::VERIFY_NONE
     CONFIG[:ssl] ? @ssl = {ssl: { verify_mode: verify } } : @ssl = false
   end
@@ -112,6 +113,7 @@ class Env
   def imap_connect
     begin
       @imap = Net::IMAP.new(@server, @port, @ssl)
+      @imap.gmail if @gmail
       @imap.login(@user, @pass)
     rescue => e
       puts "Can't login to IMAP server: #{e.message}"

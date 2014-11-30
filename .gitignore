@@ -4,6 +4,6 @@ lib/db/mailbox.db
 example
 config.yml
 state.yml
-sladkowski_*
+sladkowski*
 .lock-*
 lib/views/assets/js/pathes.js

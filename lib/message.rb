@@ -15,7 +15,11 @@ class Message < ActiveRecord::Base
     @env.imap.select(folder.imap_name)
     queue = @env.imap.search(['ALL'])
     arch_logger "Fetch headers for #{queue.count} message(s)"
-    queue.each{|seqno| fetch_message_headers(folder, seqno); ".".print_and_flush(CMD_LINE_OPTIONS.verbose) }
+    if @env.gmail
+      queue.each{|seqno| fetch_gmail_message_headers(folder, seqno); ".".print_and_flush(CMD_LINE_OPTIONS.verbose) }
+    else
+      queue.each{|seqno| fetch_message_headers(folder, seqno); ".".print_and_flush(CMD_LINE_OPTIONS.verbose) }
+    end
     arch_logger " done"
   end
 
@@ -23,11 +27,23 @@ class Message < ActiveRecord::Base
     @env.imap_connect unless @env.imap
     @env.imap.select(folder.imap_name)
     arch_logger "Create message tree in folder #{folder.name}"
-    threaded_list=@env.imap.thread("REFERENCES", 'ALL', 'UTF-8')
-    threaded_list.each do |thread_member|
-      if thread_member.children.count > 0
-        parent = find_stored_msg_by_seqno thread_member.seqno if thread_member.seqno
-        create_message_branch(thread_member, parent)
+    begin
+      threaded_list=@env.imap.thread("REFERENCES", 'ALL', 'UTF-8')
+      threaded_list.each do |thread_member|
+        if thread_member.children.count > 0
+          parent = find_stored_msg_by_seqno thread_member.seqno if thread_member.seqno
+          create_message_branch(thread_member, parent)
+        end
+      end
+    rescue => e
+      if @env.gmail
+        folder.messages.each do |message|
+          parent = folder.messages.find_by(gm_msgid: message.gm_thrid)
+          parent.children << message if parent
+        end
+      else
+        arch_logger "IMAP server doesn't support normal threading: #{e.message}"
+        arch_logger "Message tree will be created by 'in_reply_to' field only."
       end
     end
     #thread correction
@@ -74,6 +90,29 @@ class Message < ActiveRecord::Base
                    in_reply_to: mail.in_reply_to,
                    folder: folder,
                    rfc_header: data.attr["RFC822.HEADER"]
+    )
+  end
+
+  def fetch_gmail_message_headers(folder, seqno)
+    data = @env.imap.fetch(seqno, ["UID", "ENVELOPE", "RFC822.HEADER", "RFC822.SIZE", "INTERNALDATE", "FLAGS", "X-GM-LABELS", "X-GM-MSGID", "X-GM-THRID"])[0]
+    envelope = data.attr["ENVELOPE"]
+    mail = Mail.read_from_string data.attr["RFC822.HEADER"]
+    subject = envelope.subject.decode unless envelope.subject.nil?
+    from = envelope.from[0].name.decode unless envelope.from[0].name.nil?
+    from = mail.from[0] unless from
+    Message.create(flags: data.attr["FLAGS"].join(","),
+                   size: data.attr["RFC822.SIZE"],
+                   created_at: data.attr["INTERNALDATE"].to_datetime,
+                   subject: subject,
+                   from: from,
+                   uid: data.attr["UID"],
+                   message_id: mail.message_id,
+                   in_reply_to: mail.in_reply_to,
+                   folder: folder,
+                   rfc_header: data.attr["RFC822.HEADER"],
+                   gm_labels: data.attr["X-GM-LABELS"].join(","),
+                   gm_msgid: data.attr["X-GM-MSGID"],
+                   gm_thrid: data.attr["X-GM-THRID"]
     )
   end
 

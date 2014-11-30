@@ -10,6 +10,8 @@ class InitSchema < ActiveRecord::Migration
     create_table :messages do |t|
       t.integer :uid
       t.string :message_id
+      t.string :gm_msgid
+      t.string :gm_thrid
       t.string :in_reply_to
       t.string :from
       t.string :subject
@@ -20,7 +22,7 @@ class InitSchema < ActiveRecord::Migration
       t.integer :parent_id
       t.belongs_to :folder
       t.text :rfc_header
-
+      t.text :gm_labels
       t.timestamps
     end
     create_table :attachments do |t|
