@@ -146,7 +146,7 @@ class Message < ActiveRecord::Base
 
     if @mail.html_part
       begin
-        body = @mail.html_part.decoded.to_utf8(@mail.text_part.charset)
+        body = @mail.html_part.decoded.to_utf8(@mail.html_part.charset)
         html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
         File.open(file, "w+b", 0644) {|f| f.write html}
       rescue => e
