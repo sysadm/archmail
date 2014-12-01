@@ -54,6 +54,10 @@ class HtmlGenerator
       messages = folder.messages.where(has_attachment: true).order(:created_at)
       File.open(file, "w+b", 0644) {|f| f.write @view.render(template: "attachment",
                                                              locals: { folder: folder, time_range: time_range, messages: messages })}
+      file = "#{path}/tags.html"
+      messages = folder.messages.order(created_at: :desc)
+      File.open(file, "w+b", 0644) {|f| f.write @view.render(template: "tags",
+                                                             locals: { folder: folder, time_range: time_range, messages: messages })}
     end
     @js.close
   end

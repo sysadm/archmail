@@ -1,0 +1,45 @@
+- shift = "../" * (folder.ancestor_ids.count + 1)
+#frame_maillist_div
+  == view.render(partial: 'frame_header', locals: { shift: shift })
+  body
+    .page-header
+      h3
+        == folder_with_icon(folder.id)
+        '  folder, mail order by date (recent first) with tags
+      h4.left_margin
+        '  Messages: #{messages.count} , Size: #{number_to_human_size(messages.sum(:size), precision: 3)}
+        - if time_range
+          ',  Time interval: [#{time_range.first.to_s} .. #{time_range.last.to_s}]
+      - flags = folder.tags_with_color('flag')
+      - unless flags.empty?
+        p
+          b
+            'Flags:
+            - flags.each do |flag, color|
+              div class="balloon balloon_#{color}"
+                = flag
+      - labels = folder.tags_with_color('label')
+      - unless labels.empty?
+        p
+          b
+            'Labels:
+            - labels.each do |label, color|
+              div class="balloon balloon_#{color}"
+                = label
+    .message_list
+      ul
+        - messages.each_with_index do |message, idx|
+          - idx.odd? ? odd = "odd" : odd = ""
+          li class="#{odd}"
+            a.message id="#{message.id}.html" href="#"
+              - message.subject = "no subject" if message.subject.nil? or message.subject.empty?
+              '#{message.subject.truncate(60)} #{message.from}
+              i  #{message.created_at.to_s}
+            - if message.tags
+              |&nbsp;&nbsp;&nbsp;
+              - message.tags.each do |tag|
+                == tag_icon_for_ordered_list tag
+  br
+  a.back
+    i.fa.fa-caret-left  back
+  iframe#framemessage src="" seamless="seamless" scrolling="auto"

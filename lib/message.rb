@@ -3,6 +3,7 @@ class Message < ActiveRecord::Base
   acts_as_tree
   belongs_to :folder
   has_many :attachments
+  has_many :tags
   after_initialize :define_context
 
   def define_context
@@ -223,5 +224,14 @@ class Message < ActiveRecord::Base
   def path
     folder = self.folder
     ([@env.arch_path] + folder.ancestry_path).join('/') + "/#{self.id}.html"
+  end
+
+  def self.create_tags
+    Message.all.each do |message|
+      flags = message.flags.split(',')
+      message.gm_labels ? labels = message.gm_labels.split(',') : labels = []
+      flags.each{|flag| Tag.create(message_id: message.id, kind: "flag", name: flag ) }
+      labels.each{|label| Tag.create(message_id: message.id, kind: "label", name: label ) }
+    end
   end
 end

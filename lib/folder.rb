@@ -44,4 +44,19 @@ class Folder < ActiveRecord::Base
       folder.destroy
     end
   end
+
+  def tags_with_color(kind='flag')
+    tags, tags_with_color = [], {}
+    if kind == 'flag'
+      combined = self.messages.map(&:flags).uniq
+    else
+      combined = self.messages.map(&:gm_labels).uniq
+    end
+    combined.each{|set| tags << set.split(',')} unless combined.empty?
+    tags.flatten.uniq.each do |tag|
+      color = Tag.where(kind: kind, name: tag).first.color
+      tags_with_color["#{tag}"] = color
+    end
+    tags_with_color
+  end
 end

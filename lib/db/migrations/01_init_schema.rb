@@ -34,5 +34,11 @@ class InitSchema < ActiveRecord::Migration
       t.integer :size
       t.belongs_to :message
     end
+    create_table :tags do |t|
+      t.string  :kind
+      t.string  :name
+      t.string  :color
+      t.belongs_to :message
+    end
   end
 end

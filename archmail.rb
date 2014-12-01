@@ -23,6 +23,8 @@ class Archmail
       @message = Message.new
       create_message_structure
     end
+    Message.create_tags
+    Tag.colorize
     save_messages
     create_html_indexes
     err_code = self_checking

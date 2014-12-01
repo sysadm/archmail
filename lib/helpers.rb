@@ -91,6 +91,15 @@ module ActionView::Helpers::TextHelper
     end
   end
 
+  def tag_icon_for_ordered_list(tag)
+    case tag.kind
+      when 'flag'
+        "<a href='#' class='tag_#{tag.color}' title='#{tag.name}'><i class='fa fa-flag' style='color:##{tag.color};'></i></a>&nbsp;"
+      else
+        "<a href='#' class='tag_#{tag.color}' title='#{tag.name}'><i class='fa fa-tag' style='color:##{tag.color};'></i></a>&nbsp;"
+    end
+  end
+
   def oddclass(counter=nil)
     @@counter = counter if counter
     @@counter.odd? ? oddclass="odd" : oddclass="even"
