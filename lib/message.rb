@@ -2,8 +2,8 @@ class Message < ActiveRecord::Base
   attr_reader :env, :view
   acts_as_tree
   belongs_to :folder
-  has_many :attachments
-  has_many :tags
+  has_many :attachments, dependent: :destroy
+  has_many :tags, dependent: :destroy
   after_initialize :define_context
 
   def define_context
@@ -230,8 +230,8 @@ class Message < ActiveRecord::Base
     Message.all.each do |message|
       flags = message.flags.split(',')
       message.gm_labels ? labels = message.gm_labels.split(',') : labels = []
-      flags.each{|flag| Tag.create(message_id: message.id, kind: "flag", name: flag ) }
-      labels.each{|label| Tag.create(message_id: message.id, kind: "label", name: label ) }
+      flags.each{|flag| Tag.find_or_create_by(message_id: message.id, kind: "flag", name: flag ) }
+      labels.each{|label| Tag.find_or_create_by(message_id: message.id, kind: "label", name: label ) }
     end
   end
 end

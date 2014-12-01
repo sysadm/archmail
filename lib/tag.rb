@@ -12,9 +12,9 @@ class Tag < ActiveRecord::Base
 
   def self.generate_uniq_color
     begin
-      r = rand(200..248).to_s(16)
-      g = rand(200..248).to_s(16)
-      b = rand(200..248).to_s(16)
+      r = rand(120..230).to_s(16)
+      g = rand(70..150).to_s(16)
+      b = rand(80..164).to_s(16)
       @color = r+g+b
     end until color_uniq? @color
     @color

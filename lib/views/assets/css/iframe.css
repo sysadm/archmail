@@ -69,3 +69,32 @@ ul {
 }
 #attachments_table tr:nth-child(even) {background: #f8f8f8;}
 #attachments_table tr:nth-child(odd) {background: #FFF}
+
+.tag_name {
+    float: left;
+    font-size: 14px;
+    margin-left: 8px;
+    margin-right: 10px;
+    font-weight: bold;
+}
+#flags {
+    float: left;
+    width: 100%;
+    margin-bottom: 6px;
+    margin-top: 0px;
+}
+#labels {
+    float: left;
+    width: 100%;
+    margin-bottom: 10px;
+}
+.balloon {
+    display: inline-block;
+    float: left;
+    text-align: center;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-left: 5px;
+    color: white;
+    opacity: 1;
+}
