@@ -9,7 +9,8 @@ class String
                            "x-originating-ip:", "Content-Disposition:", "Organization:", "DKIM-Signature:",
                            "X-Priority:", "Disposition-Notification-To:", "X-MSMail-Priority:", "X-MimeOLE:",
                            "X-Asterisk-CallerID:", "X-TMN:", "X-Originating-Email:", "Importance:",
-                           "X-OriginalArrivalTime:", "X-Received:", "X-Goomoji-Body:"]
+                           "X-OriginalArrivalTime:", "X-Received:", "X-Goomoji-Body:", "X-Google-DKIM-Signature:",
+                           "X-Gm-Message-State:", "X-Gmail-Fetch-Info:", "DomainKey-Signature:", "Received-SPF:"]
 
   def decode
     Mail::Encodings.value_decode(self)

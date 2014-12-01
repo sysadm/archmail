@@ -80,6 +80,7 @@ class Message < ActiveRecord::Base
     subject = envelope.subject.decode unless envelope.subject.nil?
     from = envelope.from[0].name.decode unless envelope.from[0].name.nil?
     from = mail.from[0] unless from
+    mail.in_reply_to.kind_of?(Array) ? in_reply_to = mail.in_reply_to.last : in_reply_to = mail.in_reply_to
     Message.create(flags: data.attr["FLAGS"].join(","),
                    size: data.attr["RFC822.SIZE"],
                    created_at: data.attr["INTERNALDATE"].to_datetime,
@@ -87,7 +88,7 @@ class Message < ActiveRecord::Base
                    from: from,
                    uid: data.attr["UID"],
                    message_id: mail.message_id,
-                   in_reply_to: mail.in_reply_to,
+                   in_reply_to: in_reply_to,
                    folder: folder,
                    rfc_header: data.attr["RFC822.HEADER"]
     )
@@ -100,6 +101,7 @@ class Message < ActiveRecord::Base
     subject = envelope.subject.decode unless envelope.subject.nil?
     from = envelope.from[0].name.decode unless envelope.from[0].name.nil?
     from = mail.from[0] unless from
+    mail.in_reply_to.kind_of?(Array) ? in_reply_to = mail.in_reply_to.last : in_reply_to = mail.in_reply_to
     Message.create(flags: data.attr["FLAGS"].join(","),
                    size: data.attr["RFC822.SIZE"],
                    created_at: data.attr["INTERNALDATE"].to_datetime,
@@ -107,7 +109,7 @@ class Message < ActiveRecord::Base
                    from: from,
                    uid: data.attr["UID"],
                    message_id: mail.message_id,
-                   in_reply_to: mail.in_reply_to,
+                   in_reply_to: in_reply_to,
                    folder: folder,
                    rfc_header: data.attr["RFC822.HEADER"],
                    gm_labels: data.attr["X-GM-LABELS"].join(","),
