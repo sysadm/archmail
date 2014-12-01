@@ -33,9 +33,13 @@ class Archmail
   def create_message_structure
     if @options.folders == :all
       Folder.all.each do |folder|
-        arch_logger "Folder: #{folder.id} - #{folder.imap_name}"
-        @message.fetch_all_headers(folder)
-        @message.create_messages_tree_in_folder(folder)
+        unless folder.attr.downcase.include? "noselect"
+          arch_logger "Folder: #{folder.id} - #{folder.imap_name}"
+          @message.fetch_all_headers(folder)
+          @message.create_messages_tree_in_folder(folder)
+        else
+          arch_logger "Folder: #{folder.id} - #{folder.imap_name} will be ignored, 'cause have attribute 'Noselect'"
+        end
       end
       @state.message_structure_complete = true
       @state.save
@@ -44,9 +48,13 @@ class Archmail
       if backup_folder
         CMD_LINE_OPTIONS.recursive ? @folders = backup_folder.self_and_descendants : @folders = [backup_folder]
         @folders.each do |folder|
-          arch_logger "Folder: #{folder.id} - #{folder.imap_name}"
-          @message.fetch_all_headers(folder)
-          @message.create_messages_tree_in_folder(folder)
+          unless folder.attr.downcase.include? "noselect"
+            arch_logger "Folder: #{folder.id} - #{folder.imap_name}"
+            @message.fetch_all_headers(folder)
+            @message.create_messages_tree_in_folder(folder)
+          else
+            arch_logger "Folder: #{folder.id} - #{folder.imap_name} will be ignored, 'cause have attribute 'Noselect'"
+          end
         end
         backup_folder.except_clean_up CMD_LINE_OPTIONS.recursive
         @state.message_structure_complete = true

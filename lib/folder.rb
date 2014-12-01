@@ -14,7 +14,7 @@ class Folder < ActiveRecord::Base
     %x{cp -r lib/views/assets \"#{@env.arch_path}\" }
     mailboxes = @env.imap.list("", "%").to_a
     mailboxes.each{|mailbox|
-      folder = Folder.find_or_create_by(name: mailbox.name, imap_name: mailbox.name)
+      folder = Folder.find_or_create_by(name: mailbox.name, imap_name: mailbox.name, delim: mailbox.delim, attr: mailbox.attr.join(','))
       %x{mkdir -p \"#{@env.arch_path}/#{folder.name}\" }
       if mailbox.attr.include? :Haschildren
         create_subfolder_tree folder
@@ -23,10 +23,10 @@ class Folder < ActiveRecord::Base
   end
 
   def create_subfolder_tree(folder)
-    mailboxes = @env.imap.list("#{folder.imap_name}.", "%").to_a
+    mailboxes = @env.imap.list("#{folder.imap_name}#{folder.delim}", "%").to_a
     mailboxes.each{|mailbox|
-      name = mailbox.name.gsub("#{folder.imap_name}.", "")
-      subfolder = folder.children.create(name: name, imap_name: mailbox.name)
+      name = mailbox.name.gsub("#{folder.imap_name}#{folder.delim}", "")
+      subfolder = folder.children.create(name: name, imap_name: mailbox.name, delim: mailbox.delim, attr: mailbox.attr.join(','))
       %x{mkdir -p \"#{([@env.arch_path] + subfolder.ancestry_path).join('/')}\" }
       create_subfolder_tree subfolder if mailbox.attr.include? :Haschildren
     }

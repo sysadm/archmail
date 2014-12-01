@@ -3,7 +3,9 @@ class InitSchema < ActiveRecord::Migration
     create_table :folders do |t|
       t.string :name
       t.string :imap_name
+      t.string :delim
       t.integer :parent_id
+      t.text :attr
 
       t.timestamps
     end
