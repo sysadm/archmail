@@ -396,3 +396,9 @@ class Net::IMAP
     end
   end
 end
+
+class Fixnum
+  def sqrt
+    Math.sqrt(self)
+  end
+end

@@ -38,6 +38,7 @@ class InitSchema < ActiveRecord::Migration
       t.string  :kind
       t.string  :name
       t.string  :color
+      t.string  :hcolor
       t.belongs_to :message
     end
   end
