@@ -98,3 +98,10 @@ ul {
     color: white;
     opacity: 1;
 }
+.remove_filter {
+    display: none;
+    font-weight: bold;
+    font-size: 12px;
+    color: #d4145a;
+    float: right;
+}

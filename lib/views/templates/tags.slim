@@ -16,22 +16,26 @@
       div#flags
         .tag_name Flags:
         - flags.each do |flag, color|
-          div class="balloon balloon_#{color}"
+          div id="tag_#{color}" class="balloon balloon_#{color}"
             = flag
+          div.remove_filter#remove_filter
+            'remove filter&nbsp;
+            i.fa.fa-times style='color: #d4145a;'
       br
     - labels = folder.tags_with_color('label')
     - unless labels.empty?
       div#labels
         .tag_name Labels:
         - labels.each do |label, color|
-          div class="balloon balloon_#{color}"
+          div id="tag_#{color}" class="balloon balloon_#{color}"
             = label
     hr style="clear:both;"
     .message_list
       ul
         - messages.each_with_index do |message, idx|
           - idx.odd? ? odd = "odd" : odd = ""
-          li class="#{odd}"
+          - tag_classes = message.tags.map{|tag| "tag_#{tag.color}" }.join(" ")
+          li class="#{odd} #{tag_classes}"
             a.message id="#{message.id}.html" href="#"
               - message.subject = "no subject" if message.subject.nil? or message.subject.empty?
               '#{message.subject.truncate(60)} #{message.from}
