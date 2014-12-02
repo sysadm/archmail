@@ -48,9 +48,9 @@ class Folder < ActiveRecord::Base
   def tags_with_color(kind='flag')
     tags, tags_with_color = [], {}
     if kind == 'flag'
-      combined = self.messages.map(&:flags).uniq
+      combined = self.messages.map(&:flags).uniq.compact
     else
-      combined = self.messages.map(&:gm_labels).uniq
+      combined = self.messages.map(&:gm_labels).uniq.compact
     end
     combined.each{|set| tags << set.split(',')} unless combined.empty?
     tags.flatten.uniq.each do |tag|
