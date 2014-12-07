@@ -33,7 +33,7 @@ class CmdLineParser
       opts.on("-f", "--folder=FOLDER", "Backup specific folder, case sensitive. Example: \"INBOX/Year 2014/Décembre\" (quotes required)") do |folder|
         options.unknown = false
         options.folders = :specific
-        options.folder = folder.split('/').join('.')
+        options.folder = folder
       end
 
       # Boolean switch.

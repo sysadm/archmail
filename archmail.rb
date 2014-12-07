@@ -55,7 +55,7 @@ class Archmail
       @state.message_structure_complete = true
       @state.save
     else
-      backup_folder = Folder.find_by(imap_name: @options.folder)
+      backup_folder = Folder.find_by_path @options.folder.split('/')
       if backup_folder
         CMD_LINE_OPTIONS.recursive ? @folders = backup_folder.self_and_descendants : @folders = [backup_folder]
         @folders.each do |folder|
@@ -71,7 +71,7 @@ class Archmail
         @state.message_structure_complete = true
         @state.save
       else
-        arch_logger "Folder: #{@options.folder.split('.').join('/')} doesn't exist on imap server"
+        arch_logger "Folder: #{@options.folder} doesn't exist on imap server"
         exit 1
       end
     end
@@ -141,7 +141,7 @@ class Archmail
   end
 
   def message_info(message)
-    arch_logger "\t folder: #{message.folder.imap_name.split('.').join('/')}"
+    arch_logger "\t folder: #{message.folder.imap_name.split(message.folder.delim).join('/')}"
     arch_logger "\t subject: #{message.subject}"
     arch_logger "\t date: #{message.created_at.to_s}"
     arch_logger "\t from: #{message.from}"
