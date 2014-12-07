@@ -146,16 +146,16 @@ class Message < ActiveRecord::Base
 
     if @mail.html_part
       body = decode_message_safely(message.id, @mail.html_part, @mail.html_part.charset)
-      html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
+      html = @view.render(template: 'message', locals: { rfc_header: decode_header_safely(header,@mail.html_part.charset), body: body, message: message } )
       save_file_safely(file, html)
     elsif @mail.text_part and @mail.text_part.body.decoded.size > 0
       body = decode_message_safely(message.id, @mail.text_part, @mail.text_part.charset).body_to_html
-      html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
+      html = @view.render(template: 'message', locals: { rfc_header: decode_header_safely(header,@mail.text_part.charset), body: body, message: message } )
       save_file_safely(file, html)
     elsif @mail.text_part and @mail.text_part.body.decoded.size == 0
       message.has_attachment? ? attachments = " and attachment(s)" : attachments = ""
       body = "<h4>This email include only empty text part#{attachments}.</h4>"
-      html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
+      html = @view.render(template: 'message', locals: { rfc_header: decode_header_safely(header,@mail.charset), body: body, message: message } )
       save_file_safely(file, html)
     else
       begin
@@ -171,8 +171,8 @@ class Message < ActiveRecord::Base
             path = ([@env.arch_path] + message.folder.ancestry_path + [message.id]).join('/') + "/"
             %x{mkdir -p \"#{path}\" }
             filename = "#{message.id}_0.#{extension}"
-            binary_body = @mail.body.decoded
-            attach = save_file_safely(path + filename, binary_body)
+            body = decode_message_safely(message.id, @mail.body, nil)
+            attach = save_file_safely(path + filename, body)
             if attach
               Attachment.create(message: message, filename: filename, original_filename: original_filename,
                                 content_type: content_type, size: attach)
@@ -182,7 +182,7 @@ class Message < ActiveRecord::Base
           else
             @body = decode_message_safely(message.id, @mail.body, @mail.charset).body_to_html
           end
-          html = @view.render(template: 'message', locals: { rfc_header: header, body: @body, message: message } )
+          html = @view.render(template: 'message', locals: { rfc_header: decode_header_safely(header,@mail.charset), body: @body, message: message } )
           save_file_safely(file, html)
         end
       rescue => e
@@ -190,6 +190,19 @@ class Message < ActiveRecord::Base
       end
     end
     message.update_attribute(:export_complete, true)
+  end
+
+  def decode_header_safely(header, charset=nil)
+    if charset.nil?
+      result = header.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "")
+    else
+      begin
+        result = header.force_encoding(charset.charset_alias)
+      rescue => e
+        result = header.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "")
+      end
+    end
+    result
   end
 
   def decode_message_safely(id, mail_part, charset)
@@ -200,18 +213,22 @@ class Message < ActiveRecord::Base
       @str = mail_part.body
     end
     if charset.nil?
-      @conversion_errors[id] = "charset undefined"
-      result = @str.to_s
+      begin
+        result = @str.to_s.force_encoding('UTF-8')
+      rescue => e
+        @conversion_errors[id] = e.message
+        return @str.to_s.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "")
+      end
     else
       begin
         if @str.kind_of? String
           result = @str.to_utf8(charset.charset_alias)
         else
-          result = @str.decoded.force_encoding(charset.charset_alias).encode('UTF-8')
+          result = @str.decoded.force_encoding(charset.charset_alias)
         end
       rescue => e
         @conversion_errors[id] = e.message
-        return @str.to_s
+        return @str.to_s.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "")
       end
     end
     result
