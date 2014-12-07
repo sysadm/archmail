@@ -49,7 +49,7 @@ CMD_LINE_OPTIONS = CmdLineParser.parse(ARGV)
 def create_config
   config = {}
   "Gmail account (y/N)? ".print_and_flush(true)
-  input = gets.chomp
+  input = gets.chomp.strip
   input.downcase == "y" ? config[:gmail] = true : config[:gmail] = false
   if config[:gmail]
     config[:server] = "imap.gmail.com"
@@ -57,22 +57,23 @@ def create_config
     config[:ssl] = true
     config[:ssl_cert_verify] = true
     "Your full Gmail address (e.g. \"me@gmail.com\"): ".print_and_flush(true)
-    config[:login] = gets.chomp
+    config[:login] = gets.chomp.strip
   else
     "IMAP server hostname: ".print_and_flush(true)
-    config[:server] = gets.chomp
-    "port: ".print_and_flush(true)
-    config[:port] = gets.chomp.to_i
+    config[:server] = gets.chomp.strip
+    "port (993): ".print_and_flush(true)
+    port = gets.chomp.strip.to_i
+    port == 0 ? config[:port] = 993 : config[:port] = port
     "TLS/SSL required (Y/n)? ".print_and_flush(true)
-    input = gets.chomp
+    input = gets.chomp.strip
     input.downcase == "n" ? config[:ssl] = false : config[:ssl] = true
     if config[:ssl]
       "Verify SSL certificate (y/N)? ".print_and_flush(true)
-      input = gets.chomp
+      input = gets.chomp.strip
       input.downcase == "y" ? config[:ssl_cert_verify] = true : config[:ssl_cert_verify] = false
     end
     "Your login: ".print_and_flush(true)
-    config[:login] = gets.chomp
+    config[:login] = gets.chomp.strip
   end
   "Type your password (will be hidden): ".print_and_flush(true)
   config[:password] = STDIN.noecho(&:gets).chomp

@@ -35,6 +35,8 @@ class Archmail
     end
     create_html_indexes
     err_code = self_checking
+    @state.finish_time = Time.now
+    @state.save
     %x{rm -f ./.lock-ClosureTree*}
     exit err_code
   end
