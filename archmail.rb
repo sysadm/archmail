@@ -26,6 +26,13 @@ class Archmail
     Message.create_tags
     Tag.colorize
     save_messages
+    unless @message.conversion_errors.empty?
+      @message.conversion_errors.each do |key, value|
+        arch_logger "Message #{key}:"
+        message_info(Message.find key)
+        arch_logger "  probably wasn't converted normally to UTF-8 'cause: #{value}"
+      end
+    end
     create_html_indexes
     err_code = self_checking
     %x{rm -f ./.lock-ClosureTree*}

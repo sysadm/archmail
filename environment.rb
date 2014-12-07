@@ -10,7 +10,6 @@ require 'action_pack'
 require 'action_view'
 require 'closure_tree'
 require 'mail'
-require_relative 'lib/mime_type'
 require 'slim'
 require 'pp'
 
@@ -33,6 +32,9 @@ ActiveRecord::Base.establish_connection(
     :database => './lib/db/mailbox.db'
 )
 
+Dir.glob("./lib/extensions/*.rb").each do |file|
+  require file
+end
 Dir.glob("./lib/*.rb").each do |file|
   require file
 end

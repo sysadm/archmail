@@ -1,5 +1,5 @@
 class Message < ActiveRecord::Base
-  attr_reader :env, :view
+  attr_reader :env, :view, :conversion_errors
   acts_as_tree
   belongs_to :folder
   has_many :attachments, dependent: :destroy
@@ -9,6 +9,7 @@ class Message < ActiveRecord::Base
   def define_context
     @env ||= Env.new
     @view ||= Class.new(ActionView::Base).new("lib/views/templates")
+    @conversion_errors = {}
   end
 
   def fetch_all_headers(folder)
@@ -78,14 +79,14 @@ class Message < ActiveRecord::Base
     data = @env.imap.fetch(seqno, ["UID", "ENVELOPE", "RFC822.HEADER", "RFC822.SIZE", "INTERNALDATE", "FLAGS"])[0]
     envelope = data.attr["ENVELOPE"]
     mail = Mail.read_from_string data.attr["RFC822.HEADER"]
-    subject = envelope.subject.decode unless envelope.subject.nil?
+    mail.subject ||= envelope.subject.decode unless envelope.subject.nil?
     from = envelope.from[0].name.decode unless envelope.from[0].name.nil?
     from = mail.from[0] unless from
     mail.in_reply_to.kind_of?(Array) ? in_reply_to = mail.in_reply_to.last : in_reply_to = mail.in_reply_to
     Message.create(flags: data.attr["FLAGS"].join(","),
                    size: data.attr["RFC822.SIZE"],
                    created_at: data.attr["INTERNALDATE"].to_datetime,
-                   subject: subject,
+                   subject: mail.subject,
                    from: from,
                    uid: data.attr["UID"],
                    message_id: mail.message_id,
@@ -137,46 +138,30 @@ class Message < ActiveRecord::Base
         original_filename = attachment.filename.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "")
         content_type == "message/rfc822" ? extension = "eml" : extension = original_filename.split('.').last
         filename = "#{message.id}_#{index}.#{extension}"
-        begin
-          attach = File.open(path + filename, "w+b", 0644) {|f| f.write attachment.body.decoded}
-          Attachment.create(message: message, filename: filename, original_filename: original_filename,
-                            content_type: content_type, size: attach) if attach
-        rescue => e
-          arch_logger "Unable to save data for #{filename} because #{e.message}"
-        end
+        attach = save_file_safely(path + filename, attachment.body.decoded)
+        Attachment.create(message: message, filename: filename, original_filename: original_filename,
+                          content_type: content_type, size: attach) if attach
       end
     end
 
     if @mail.html_part
-      begin
-        body = @mail.html_part.decoded.to_utf8(@mail.html_part.charset.charset_alias)
-        html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
-        File.open(file, "w+b", 0644) {|f| f.write html}
-      rescue => e
-        arch_logger "Unable to save data for #{file} because #{e.message}"
-      end
+      body = decode_message_safely(message.id, @mail.html_part, @mail.html_part.charset)
+      html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
+      save_file_safely(file, html)
     elsif @mail.text_part and @mail.text_part.body.decoded.size > 0
-      begin
-        body = @mail.text_part.decoded.to_utf8(@mail.text_part.charset.charset_alias).body_to_html
-        html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
-        File.open(file, "w+b", 0644) {|f| f.write html}
-      rescue => e
-        arch_logger "Unable to save data for #{file} because #{e.message}"
-      end
+      body = decode_message_safely(message.id, @mail.text_part, @mail.text_part.charset).body_to_html
+      html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
+      save_file_safely(file, html)
     elsif @mail.text_part and @mail.text_part.body.decoded.size == 0
-      begin
-        message.has_attachment? ? attachments = " and attachment(s)" : attachments = ""
-        body = "<h4>This email include only empty text part#{attachments}.</h4>"
-        html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
-        File.open(file, "w+b", 0644) {|f| f.write html}
-      rescue => e
-        arch_logger "Unable to save data for #{file} because #{e.message}"
-      end
+      message.has_attachment? ? attachments = " and attachment(s)" : attachments = ""
+      body = "<h4>This email include only empty text part#{attachments}.</h4>"
+      html = @view.render(template: 'message', locals: { rfc_header: header, body: body, message: message } )
+      save_file_safely(file, html)
     else
       begin
         if @mail.body.multipart?
           @content = []
-          extract_inline_messages_from_multipart_mail(@mail)
+          extract_inline_messages_from_multipart_mail(message.id, @mail)
           @body = @content.join('==<br />')
         else
           if @mail.body.encoding == "base64"
@@ -186,8 +171,8 @@ class Message < ActiveRecord::Base
             path = ([@env.arch_path] + message.folder.ancestry_path + [message.id]).join('/') + "/"
             %x{mkdir -p \"#{path}\" }
             filename = "#{message.id}_0.#{extension}"
-            binary_body = @mail.body.decoded.force_encoding("UTF-8")
-            attach = File.open(path + filename, "w+b", 0644) {|f| f.write binary_body}
+            binary_body = @mail.body.decoded
+            attach = save_file_safely(path + filename, binary_body)
             if attach
               Attachment.create(message: message, filename: filename, original_filename: original_filename,
                                 content_type: content_type, size: attach)
@@ -195,27 +180,61 @@ class Message < ActiveRecord::Base
             end
             @body = "<h4>This email include only mime64 encoded file, it was saved like an attachment.</h4>"
           else
-            @body = @mail.body.decoded.to_utf8(@mail.charset.charset_alias).body_to_html
+            @body = decode_message_safely(message.id, @mail.body, @mail.charset).body_to_html
           end
           html = @view.render(template: 'message', locals: { rfc_header: header, body: @body, message: message } )
-          File.open(file, "w+b", 0644) {|f| f.write html}
+          save_file_safely(file, html)
         end
       rescue => e
         arch_logger "Unable to save data for #{file} because #{e.message}"
       end
     end
-
     message.update_attribute(:export_complete, true)
   end
 
-  def extract_inline_messages_from_multipart_mail(mail)
+  def decode_message_safely(id, mail_part, charset)
+    begin
+      @str = mail_part.decoded
+    rescue => e
+      @conversion_errors[id] = e.message
+      @str = mail_part.body
+    end
+    if charset.nil?
+      @conversion_errors[id] = "charset undefined"
+      result = @str.to_s
+    else
+      begin
+        if @str.kind_of? String
+          result = @str.to_utf8(charset.charset_alias)
+        else
+          result = @str.decoded.force_encoding(charset.charset_alias).encode('UTF-8')
+        end
+      rescue => e
+        @conversion_errors[id] = e.message
+        return @str.to_s
+      end
+    end
+    result
+  end
+
+  def save_file_safely(file, content)
+    begin
+      result = File.open(file, "w+b", 0644) {|f| f.write content}
+    rescue => e
+      arch_logger "Unable to save data for #{file} because #{e.message}"
+      return false
+    end
+    result
+  end
+
+  def extract_inline_messages_from_multipart_mail(message_id, mail)
     mail.parts.each do |part|
       unless part.body.decoded.empty?
         if part.content_type.start_with?('message/rfc822')
           inline_mail = Mail.read_from_string part.body.to_s
-          extract_inline_messages_from_multipart_mail(inline_mail)
+          extract_inline_messages_from_multipart_mail(message_id, inline_mail)
         else
-          @content << part.body.decoded.to_utf8(part.charset).body_to_html
+          @content << decode_message_safely(message_id, part, part.charset).body_to_html
         end
       end
     end
