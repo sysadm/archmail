@@ -15,8 +15,10 @@
         - messages.each do |message|
           li class="#{oddclass}"
             a.message id="#{message.id}.html" href="#"
-              '#{human_subject(message.subject).truncate(60)} #{message.from}
-              i  #{message.created_at.to_s}
+              '#{human_subject(message.subject).truncate(60)}
+              i
+                b #{message.from}
+                '  #{message.created_at.to_s}
           - if message.children.count > 0
             ul.nested
               == view.render(partial: 'message', locals: { parent_message: message } )

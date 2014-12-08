@@ -16,8 +16,10 @@
           - idx.odd? ? odd = "odd" : odd = ""
           li class="#{odd}"
             a.message id="#{message.id}.html" href="#"
-              '#{human_subject(message.subject).truncate(60)} #{message.from}
-              i  #{message.created_at.to_s}
+              '#{human_subject(message.subject).truncate(60)}
+              i
+                b #{message.from}
+                '  #{message.created_at.to_s}
             - if message.has_attachment?
               |&nbsp;&nbsp;&nbsp;
               - message.attachments.each do |attachment|
