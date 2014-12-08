@@ -1,7 +1,6 @@
 .DS_Store
 .idea
 lib/db/mailbox.db
-example
 config.yml
 state.yml
 sladkowski*
