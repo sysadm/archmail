@@ -100,6 +100,17 @@ module ActionView::Helpers::TextHelper
     end
   end
 
+  def human_subject(subject)
+    case subject
+      when nil
+        "no subject"
+      when ""
+        "empty subject"
+      else
+        subject
+    end
+  end
+
   def oddclass(counter=nil)
     @@counter = counter if counter
     @@counter.odd? ? oddclass="odd" : oddclass="even"

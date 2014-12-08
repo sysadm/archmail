@@ -5,20 +5,24 @@
     .page-header
       h3
         == folder_with_icon(folder.id)
-        '  folder, mail order by date (recent first)
+        '  folder, mail grouped and ordered by date (recent first)
       h4.left_margin
         '  Messages: #{messages.count} , Size: #{number_to_human_size(messages.sum(:size), precision: 3)}
         - if time_range
           ',  Time interval: [#{time_range.first.to_s} .. #{time_range.last.to_s}]
     .message_list
       ul
-        - messages.each_with_index do |message, idx|
-          - idx.odd? ? odd = "odd" : odd = ""
-          li class="#{odd}"
-            a.message id="#{message.id}.html" href="#"
-              - message.subject = "no subject" if message.subject.nil? or message.subject.empty?
-              '#{message.subject.truncate(60)} #{message.from}
-              i  #{message.created_at.to_s}
+        - group.each do |member|
+          li.group
+            - range = member.to_datetime..member.to_datetime+24.hours
+            ' #{member.strftime("%A, %e %B %Y")} &nbsp; ( #{member.to_s} )
+            ul.nested.group_member
+            - messages.where(created_at: range).each_with_index do |message, idx|
+              - idx.odd? ? odd = "odd" : odd = ""
+              li class="group_member #{odd}"
+                a.message id="#{message.id}.html" href="#"
+                  '#{human_subject(message.subject).truncate(60)}
+                  i  #{message.from}
 #frame_message_div
   br
   a.back

@@ -5,7 +5,7 @@
     .page-header
       h3
         == folder_with_icon(folder.id)
-        '  folder, emails with attachments
+        '  folder, emails with attachments only
       h4.left_margin
         '  Messages: #{messages.count} , Size: #{number_to_human_size(messages.sum(:size), precision: 3)}
         - if time_range
@@ -16,8 +16,7 @@
           - idx.odd? ? odd = "odd" : odd = ""
           li class="#{odd}"
             a.message id="#{message.id}.html" href="#"
-              - message.subject = "no subject" if message.subject.nil? or message.subject.empty?
-              '#{message.subject.truncate(60)} #{message.from}
+              '#{human_subject(message.subject).truncate(60)} #{message.from}
               i  #{message.created_at.to_s}
             - if message.has_attachment?
               |&nbsp;&nbsp;&nbsp;

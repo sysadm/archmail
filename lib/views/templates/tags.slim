@@ -37,8 +37,7 @@
           - tag_classes = message.tags.map{|tag| "tag_#{tag.color}" }.join(" ")
           li class="#{odd} #{tag_classes}"
             a.message id="#{message.id}.html" href="#"
-              - message.subject = "no subject" if message.subject.nil? or message.subject.empty?
-              '#{message.subject.truncate(60)} #{message.from}
+              '#{human_subject(message.subject).truncate(60)} #{message.from}
               i  #{message.created_at.to_s}
             - if message.tags
               |&nbsp;&nbsp;&nbsp;

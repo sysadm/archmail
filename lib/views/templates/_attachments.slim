@@ -15,7 +15,7 @@
         b = number_to_human_size(attachment.size, precision: 3)
     td
       - if attachment.content_type.include? "image"
-        a href="#{attachment.message.id}/#{attachment.filename}" data-lightbox="#{attachment.message.subject}"
+        a href="#{attachment.message.id}/#{attachment.filename}" data-lightbox="#{human_subject(attachment.message.subject).truncate(60)}"
           i.fa.fa-eye.fa-2x
           br open
       - else

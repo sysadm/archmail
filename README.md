@@ -6,7 +6,7 @@ ordered in specific way lists of emails (threaded, date, subject, author or only
 Folder with that backup can be burn, for example on DVD. And for access to your backup you have to use
 browser only. That was a main idea.
 
-The author was inspired by the hypermail. Ok, hypermail can create mailists, but only from unix mbox,
+The author was inspired by the hypermail. Well, hypermail can create mailists, but only from unix mbox,
 can't use IMAP with multiple folders that can also be nested.
 
 During the work somehow came out that was quite an interesting application that generate html visually pleasing.

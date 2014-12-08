@@ -40,16 +40,19 @@ class HtmlGenerator
                                                              locals: { folder: folder, time_range: time_range, messages: messages })}
       file = "#{path}/date.html"
       messages = folder.messages.order(created_at: :desc)
+      group = messages.map{|m| m.created_at.to_date }.uniq
       File.open(file, "w+b", 0644) {|f| f.write @view.render(template: "date",
-                                                             locals: { folder: folder, time_range: time_range, messages: messages })}
+                                                             locals: { folder: folder, time_range: time_range, messages: messages, group: group })}
       file = "#{path}/subject.html"
       messages = folder.messages.order(:subject)
+      group = messages.map(&:subject).uniq
       File.open(file, "w+b", 0644) {|f| f.write @view.render(template: "subject",
-                                                             locals: { folder: folder, time_range: time_range, messages: messages })}
+                                                             locals: { folder: folder, time_range: time_range, messages: messages, group: group })}
       file = "#{path}/author.html"
       messages = folder.messages.order(:from)
+      group = messages.map(&:from).uniq
       File.open(file, "w+b", 0644) {|f| f.write @view.render(template: "author",
-                                                             locals: { folder: folder, time_range: time_range, messages: messages })}
+                                                             locals: { folder: folder, time_range: time_range, messages: messages, group: group })}
       file = "#{path}/attachment.html"
       messages = folder.messages.where(has_attachment: true).order(:created_at)
       File.open(file, "w+b", 0644) {|f| f.write @view.render(template: "attachment",

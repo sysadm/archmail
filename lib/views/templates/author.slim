@@ -5,20 +5,23 @@
     .page-header
       h3
         == folder_with_icon(folder.id)
-        '  folder, mail order by author
+        '  folder, mail grouped and ordered by author
       h4.left_margin
         '  Messages: #{messages.count} , Size: #{number_to_human_size(messages.sum(:size), precision: 3)}
         - if time_range
           ',  Time interval: [#{time_range.first.to_s} .. #{time_range.last.to_s}]
     .message_list
       ul
-        - messages.each_with_index do |message, idx|
-          - idx.odd? ? odd = "odd" : odd = ""
-          li class="#{odd}"
-            a.message id="#{message.id}.html" href="#"
-              - message.subject = "no subject" if message.subject.nil? or message.subject.empty?
-              '#{message.subject.truncate(60)} #{message.from}
-              i  #{message.created_at.to_s}
+        - group.each do |member|
+          li.group
+            = member
+            ul.nested.group_member
+            - messages.where(from: member).each_with_index do |message, idx|
+              - idx.odd? ? odd = "odd" : odd = ""
+              li class="group_member #{odd}"
+                a.message id="#{message.id}.html" href="#"
+                  '#{human_subject(message.subject).truncate(60)}
+                  i  #{message.created_at.to_s}
 #frame_message_div
   br
   a.back
