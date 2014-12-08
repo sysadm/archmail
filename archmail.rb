@@ -12,37 +12,43 @@ class Archmail
   end
 
   def run
-    define_context
-    if @options.continue
-      create_folder_structure unless @state.folder_structure_complete
-      @message = Message.new
-      create_message_structure_continue unless @state.message_structure_complete
-    else
-      clean_all
-      create_folder_structure
-      @message = Message.new
-      create_message_structure
-    end
-    Message.create_tags
-    Tag.colorize
-    save_messages
-    unless @message.conversion_errors.empty?
-      arch_logger "This is only warning message(s), not error:"
-      @message.conversion_errors.each do |key, value|
-        arch_logger " Message #{key}:"
-        message_info(Message.find key)
-        arch_logger "  probably wasn't converted normally to UTF-8 'cause: #{value}"
+    begin
+      define_context
+      if @options.continue
+        create_folder_structure unless @state.folder_structure_complete
+        @message = Message.new
+        create_message_structure_continue unless @state.message_structure_complete
+      else
+        clean_all
+        create_folder_structure
+        @message = Message.new
+        create_message_structure
       end
+      Message.create_tags
+      Tag.colorize
+      save_messages
+      unless @message.conversion_errors.empty?
+        arch_logger "This is only warning message(s), not error:"
+        @message.conversion_errors.each do |key, value|
+          arch_logger " Message #{key}:"
+          message_info(Message.find key)
+          arch_logger "  probably wasn't converted normally to UTF-8 'cause: #{value}"
+        end
+      end
+      create_html_indexes
+      err_code = self_checking
+      @state.finish_time = Time.now
+      @state.save
+      %x{rm -f ./.lock-ClosureTree*}
+      exit err_code
+    rescue SystemExit, Interrupt
+      puts "\n\nInterrupted by user or system"
+      exit 1
     end
-    create_html_indexes
-    err_code = self_checking
-    @state.finish_time = Time.now
-    @state.save
-    %x{rm -f ./.lock-ClosureTree*}
-    exit err_code
   end
 
   def create_message_structure
+    @state.message_structure_complete_in_folder = {}
     if @options.folders == :all
       Folder.all.each do |folder|
         unless folder.attr.downcase.include? "noselect"
@@ -52,6 +58,8 @@ class Archmail
         else
           arch_logger "Folder: #{folder.id} - #{folder.imap_name} will be ignored, 'cause have attribute 'Noselect'"
         end
+        @state.message_structure_complete_in_folder[folder.id] = true
+        @state.save
       end
       @state.message_structure_complete = true
       @state.save
@@ -67,6 +75,8 @@ class Archmail
           else
             arch_logger "Folder: #{folder.id} - #{folder.imap_name} will be ignored, 'cause have attribute 'Noselect'"
           end
+          @state.message_structure_complete_in_folder[folder.id] = true
+          @state.save
         end
         backup_folder.except_clean_up CMD_LINE_OPTIONS.recursive
         @state.message_structure_complete = true
@@ -79,8 +89,53 @@ class Archmail
   end
 
   def create_message_structure_continue
-    puts "Function not implemented yet"
-    exit 0
+    if @options.folders == :all
+      Folder.all.each do |folder|
+        if @state.message_structure_complete_in_folder[folder.id]
+          arch_logger "Pass the folder #{folder.id} - #{folder.imap_name}, 'cause message structure was saved earlier"
+          else
+            unless folder.attr.downcase.include? "noselect"
+              arch_logger "Folder: #{folder.id} - #{folder.imap_name}"
+              folder.messages.destroy_all #clean all non-complete message structures in folder
+              @message.fetch_all_headers(folder)
+              @message.create_messages_tree_in_folder(folder)
+            else
+              arch_logger "Folder: #{folder.id} - #{folder.imap_name} will be ignored, 'cause have attribute 'Noselect'"
+            end
+            @state.message_structure_complete_in_folder[folder.id] = true
+            @state.save
+        end
+      end
+      @state.message_structure_complete = true
+      @state.save
+    else
+      backup_folder = Folder.find_by_path @options.folder.split('/')
+      if backup_folder
+        CMD_LINE_OPTIONS.recursive ? @folders = backup_folder.self_and_descendants : @folders = [backup_folder]
+        @folders.each do |folder|
+          if @state.message_structure_complete_in_folder[folder.id]
+            arch_logger "Pass the folder #{folder.id} - #{folder.imap_name}, 'cause message structure was saved earlier"
+          else
+            unless folder.attr.downcase.include? "noselect"
+              arch_logger "Folder: #{folder.id} - #{folder.imap_name}"
+              folder.messages.destroy_all #clean all non-complete message structures in folder
+              @message.fetch_all_headers(folder)
+              @message.create_messages_tree_in_folder(folder)
+            else
+              arch_logger "Folder: #{folder.id} - #{folder.imap_name} will be ignored, 'cause have attribute 'Noselect'"
+            end
+            @state.message_structure_complete_in_folder[folder.id] = true
+            @state.save
+          end
+        end
+        backup_folder.except_clean_up CMD_LINE_OPTIONS.recursive
+        @state.message_structure_complete = true
+        @state.save
+      else
+        arch_logger "Folder: #{@options.folder} doesn't exist on imap server"
+        exit 1
+      end
+    end
   end
 
   def create_folder_structure
@@ -158,5 +213,3 @@ end
 
 archmail = Archmail.new
 archmail.run
-
-#Archmail.debug
