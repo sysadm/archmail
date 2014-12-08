@@ -146,16 +146,16 @@ class Message < ActiveRecord::Base
 
     if @mail.html_part
       body = decode_message_safely(message.id, @mail.html_part, @mail.html_part.charset)
-      html = @view.render(template: 'message', locals: { rfc_header: decode_header_safely(header,@mail.html_part.charset), body: body, message: message } )
+      html = @view.render(template: 'message', locals: { rfc_header: decode_header_safely(header), body: body, message: message } )
       save_file_safely(file, html)
     elsif @mail.text_part and @mail.text_part.body.decoded.size > 0
       body = decode_message_safely(message.id, @mail.text_part, @mail.text_part.charset).body_to_html
-      html = @view.render(template: 'message', locals: { rfc_header: decode_header_safely(header,@mail.text_part.charset), body: body, message: message } )
+      html = @view.render(template: 'message', locals: { rfc_header: decode_header_safely(header), body: body, message: message } )
       save_file_safely(file, html)
     elsif @mail.text_part and @mail.text_part.body.decoded.size == 0
       message.has_attachment? ? attachments = " and attachment(s)" : attachments = ""
       body = "<h4>This email include only empty text part#{attachments}.</h4>"
-      html = @view.render(template: 'message', locals: { rfc_header: decode_header_safely(header,@mail.charset), body: body, message: message } )
+      html = @view.render(template: 'message', locals: { rfc_header: decode_header_safely(header), body: body, message: message } )
       save_file_safely(file, html)
     else
       begin
@@ -182,7 +182,7 @@ class Message < ActiveRecord::Base
           else
             @body = decode_message_safely(message.id, @mail.body, @mail.charset).body_to_html
           end
-          html = @view.render(template: 'message', locals: { rfc_header: decode_header_safely(header,@mail.charset), body: @body, message: message } )
+          html = @view.render(template: 'message', locals: { rfc_header: decode_header_safely(header), body: @body, message: message } )
           save_file_safely(file, html)
         end
       rescue => e
@@ -192,15 +192,11 @@ class Message < ActiveRecord::Base
     message.update_attribute(:export_complete, true)
   end
 
-  def decode_header_safely(header, charset=nil)
-    if charset.nil?
+  def decode_header_safely(header)
+    begin
+      result = header.decode.force_encoding('UTF-8')
+    rescue => e
       result = header.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "")
-    else
-      begin
-        result = header.force_encoding(charset.charset_alias)
-      rescue => e
-        result = header.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "")
-      end
     end
     result
   end
@@ -222,9 +218,9 @@ class Message < ActiveRecord::Base
     else
       begin
         if @str.kind_of? String
-          result = @str.to_utf8(charset.charset_alias)
+          result = @str.to_utf8(charset.charset_alias).encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "")
         else
-          result = @str.decoded.force_encoding(charset.charset_alias)
+          result = @str.decoded.force_encoding(charset.charset_alias).encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "")
         end
       rescue => e
         @conversion_errors[id] = e.message
