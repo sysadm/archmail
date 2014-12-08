@@ -8,12 +8,18 @@ class Archmail
   def define_context
     @options = CMD_LINE_OPTIONS
     @state = State.open
+    @state.interrupts ||= []
     @env = Env.new
   end
 
   def run
     begin
       define_context
+      if @state.interrupts.count > 0
+        arch_logger "Program was interrupted #{@state.interrupts.count} times, last time at: #{@state.interrupts.last}\n\n"
+      else
+        arch_logger "Program can be interrupted any moment with 'ctrl + C'\n\n"
+      end
       if @options.continue
         create_folder_structure unless @state.folder_structure_complete
         @message = Message.new
@@ -39,10 +45,16 @@ class Archmail
       err_code = self_checking
       @state.finish_time = Time.now
       @state.save
+      if @state.interrupts.empty?
+        estimate = (@state.finish_time - @state.begin_time).human_readable_time_interval
+        arch_logger "total time: #{estimate}."
+      end
       %x{rm -f ./.lock-ClosureTree*}
       exit err_code
-    rescue SystemExit, Interrupt
-      puts "\n\nInterrupted by user or system"
+    rescue Interrupt
+      @state.interrupts << Time.now
+      @state.save
+      puts "\n\nInterrupted by user"
       exit 1
     end
   end
@@ -52,11 +64,11 @@ class Archmail
     if @options.folders == :all
       Folder.all.each do |folder|
         unless folder.attr.downcase.include? "noselect"
-          arch_logger "Folder: #{folder.id} - #{folder.imap_name}"
+          arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')}"
           @message.fetch_all_headers(folder)
           @message.create_messages_tree_in_folder(folder)
         else
-          arch_logger "Folder: #{folder.id} - #{folder.imap_name} will be ignored, 'cause have attribute 'Noselect'"
+          arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')} will be ignored, 'cause have attribute 'Noselect'"
         end
         @state.message_structure_complete_in_folder[folder.id] = true
         @state.save
@@ -69,11 +81,11 @@ class Archmail
         CMD_LINE_OPTIONS.recursive ? @folders = backup_folder.self_and_descendants : @folders = [backup_folder]
         @folders.each do |folder|
           unless folder.attr.downcase.include? "noselect"
-            arch_logger "Folder: #{folder.id} - #{folder.imap_name}"
+            arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')}"
             @message.fetch_all_headers(folder)
             @message.create_messages_tree_in_folder(folder)
           else
-            arch_logger "Folder: #{folder.id} - #{folder.imap_name} will be ignored, 'cause have attribute 'Noselect'"
+            arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')} will be ignored, 'cause have attribute 'Noselect'"
           end
           @state.message_structure_complete_in_folder[folder.id] = true
           @state.save
@@ -92,15 +104,15 @@ class Archmail
     if @options.folders == :all
       Folder.all.each do |folder|
         if @state.message_structure_complete_in_folder[folder.id]
-          arch_logger "Pass the folder #{folder.id} - #{folder.imap_name}, 'cause message structure was saved earlier"
+          arch_logger "Pass the folder #{folder.id} - \"#{folder.self_and_ancestors.map(&:name).reverse.join('/')}\", 'cause message structure was saved earlier"
           else
             unless folder.attr.downcase.include? "noselect"
-              arch_logger "Folder: #{folder.id} - #{folder.imap_name}"
+              arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')}"
               folder.messages.destroy_all #clean all non-complete message structures in folder
               @message.fetch_all_headers(folder)
               @message.create_messages_tree_in_folder(folder)
             else
-              arch_logger "Folder: #{folder.id} - #{folder.imap_name} will be ignored, 'cause have attribute 'Noselect'"
+              arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')} will be ignored, 'cause have attribute 'Noselect'"
             end
             @state.message_structure_complete_in_folder[folder.id] = true
             @state.save
@@ -114,15 +126,15 @@ class Archmail
         CMD_LINE_OPTIONS.recursive ? @folders = backup_folder.self_and_descendants : @folders = [backup_folder]
         @folders.each do |folder|
           if @state.message_structure_complete_in_folder[folder.id]
-            arch_logger "Pass the folder #{folder.id} - #{folder.imap_name}, 'cause message structure was saved earlier"
+            arch_logger "Pass the folder #{folder.id} - \"#{folder.self_and_ancestors.map(&:name).reverse.join('/')}\", 'cause message structure was saved earlier"
           else
             unless folder.attr.downcase.include? "noselect"
-              arch_logger "Folder: #{folder.id} - #{folder.imap_name}"
+              arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')}"
               folder.messages.destroy_all #clean all non-complete message structures in folder
               @message.fetch_all_headers(folder)
               @message.create_messages_tree_in_folder(folder)
             else
-              arch_logger "Folder: #{folder.id} - #{folder.imap_name} will be ignored, 'cause have attribute 'Noselect'"
+              arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')} will be ignored, 'cause have attribute 'Noselect'"
             end
             @state.message_structure_complete_in_folder[folder.id] = true
             @state.save
@@ -172,7 +184,7 @@ class Archmail
     Message.all.each { |message| errors << message unless File.exist? message.path }
     Attachment.all.each { |attachment| errors << attachment unless File.exist? attachment.path }
     if errors.empty?
-      arch_logger "Backup complete."
+      arch_logger "Backup complete"
     else
       arch_logger "Backup complete, but #{errors.count} error(s) occured:"
       errors.each do |err|
