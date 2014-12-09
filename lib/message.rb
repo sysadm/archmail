@@ -80,14 +80,17 @@ class Message < ActiveRecord::Base
     envelope = data.attr["ENVELOPE"]
     mail = Mail.read_from_string data.attr["RFC822.HEADER"]
     mail.subject ||= envelope.subject.decode unless envelope.subject.nil?
+    mail.subject = mail.subject.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless mail.subject.nil?
     from = envelope.from[0].name.decode unless envelope.from[0].name.nil?
     from = mail.from[0] unless from
+    from = from.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless from.nil?
+    data.attr["FLAGS"] ? flags = data.attr["FLAGS"].join(",") : flags = ''
     mail.in_reply_to.kind_of?(Array) ? in_reply_to = mail.in_reply_to.last : in_reply_to = mail.in_reply_to
-    Message.create(flags: data.attr["FLAGS"].join(","),
+    Message.create(flags: flags,
                    size: data.attr["RFC822.SIZE"],
                    created_at: data.attr["INTERNALDATE"].to_datetime,
-                   subject: mail.subject.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => ""),
-                   from: from.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => ""),
+                   subject: mail.subject,
+                   from: from,
                    uid: data.attr["UID"],
                    message_id: mail.message_id,
                    in_reply_to: in_reply_to,
