@@ -81,7 +81,7 @@ class Message < ActiveRecord::Base
     mail = Mail.read_from_string data.attr["RFC822.HEADER"]
     mail.subject ||= envelope.subject.decode unless envelope.subject.nil?
     mail.subject = mail.subject.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless mail.subject.nil?
-    from = envelope.from[0].name.decode if envelope.from[0].try(:name)
+    from = envelope.from[0].name.decode if envelope.try(:from).try(:first).try(:name)
     from = mail.from[0] unless from
     from = from.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless from.nil?
     data.attr["FLAGS"] ? flags = data.attr["FLAGS"].join(",") : flags = ''
