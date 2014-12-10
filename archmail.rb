@@ -101,6 +101,7 @@ class Archmail
   end
 
   def create_message_structure_continue
+    @state.message_structure_complete_in_folder ||= {}
     if @options.folders == :all
       Folder.all.each do |folder|
         if @state.message_structure_complete_in_folder[folder.id]
