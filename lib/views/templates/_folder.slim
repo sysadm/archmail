@@ -3,7 +3,7 @@ a.children.collapsed.folder id="folder_#{parent_folder.id}" href="#" data-toggle
   span.caret.pull-right
 .collapse id="toggle_folder_#{parent_folder.id}"
   ul.nav.nav-list
-    - parent_folder.children.each do |folder|
+    - parent_folder.children.order(:name).each do |folder|
       li
         - if folder.children.count > 0
           == view.render(partial: 'folder', locals: { parent_folder: folder } )
