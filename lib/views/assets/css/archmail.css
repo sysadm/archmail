@@ -161,6 +161,11 @@ body{
         color: white;
     }
 }
+#folders_list {
+    height: 100%;
+    overflow-y: scroll;
+}
+
 #mobilelogo {
     max-width: 110px;
 }
