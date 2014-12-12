@@ -50,6 +50,7 @@ Features
 4. `cd archmail && bundle install`
 5. use it!
 
+**Note:** *You can find very detailed installation example [here](https://github.com/sysadm/archmail/raw/master/INSTALL)*
 
 ## Using
 

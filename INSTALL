@@ -1,0 +1,112 @@
+Installation notes and example
+******************************
+
+Archmail was created with the thought of *nix-like OS users. So any Linux, BSD, MacOsX etc user can use it natively.
+If you are poor windows user you can use it on any VPS or virtual machine, for example VirtualBox, Vmware etc.
+
+Just take into account, that if you have huge mailbox ruby MUST HAVE a lot of RAM memory to run. At least 1GB,
+maybe more, it's depend from your mailbox. Time of full backup will decrease really impressive
+if you will use SSD hard disk.
+
+You just need a basic knowledge about unix command line and basic unix command. Anyway, Google can help you.
+If you don't know anything and don't want to search and learn - I'm sorry, you have bad luck.
+
+I think about create online service, based on this program, but at this moment it's not ready yet.
+
+
+Here described basic installation process for CentOS/RHEL like an example.
+In case Ubuntu/Debian/whatever process will be very similar, maybe even easier.
+
+First step: Add repository like a root
+======================================
+
+file: /etc/yum.repos.d/rpmforge.repo
+====
+[rpmforge]
+name = RHEL $releasever - RPMforge.net - dag
+baseurl = http://apt.sw.be/redhat/el6/en/$basearch/rpmforge
+mirrorlist = http://mirrorlist.repoforge.org/el6/mirrors-rpmforge
+enabled = 1
+protect = 0
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmforge-dag
+gpgcheck = 1
+====
+
+and execute in command line:
+# rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
+# yum update
+
+
+Second step: Installation RVM requirements and requirements for backend like a root
+===================================================================================
+
+for CentOS/RHEL/other rpm-based linux distributions:
+# yum install gcc-c++ patch readline readline-devel zlib zlib-devel coreutils libyaml-devel \
+libffi-devel openssl-devel make bzip2 autoconf automake libtool bison iconv-devel git sqlite sqlite-devel
+
+if you want to use postgresql like a backend do
+# yum install postgresql postgresql-devel
+
+if mysql
+# yum install mysql mysql-devel
+or (depend of version CentOS/RHEL or your preferences)
+# yum install mariadb mariadb-devel
+
+for Ubuntu/Debian/other dpkg-based distributions:
+# apt-get install gawk g++ libreadline6-dev zlib1g-dev libssl-dev libyaml-dev libsqlite3-dev sqlite3 \
+autoconf libgdbm-dev libncurses5-dev automake libtool bison libffi-dev
+
+for MacOsX install homebrew (http://brew.sh/) first, then go to third step, install RVM like a user and after that do
+$ rvm requirements
+
+Third step: Create normal user and login like a normal user (with su - for example) or just use your standard login
+===================================================================================================================
+WARNING: All subsequent commands must be executed exactly like a normal user, not root!
+
+install RVM, more info on official webpage (http://rvm.io/)
+$ curl -L get.rvm.io | bash -s stable
+
+(and follow instuctions about add gpg key or PATH if necessary)
+
+load RVM
+$ source ~/.rvm/scripts/rvm
+
+if you don't want any problem in the future just add above line or next section to .bashrc, .bash_profile
+or .profile (depend from OS) for autoload
+~/.bash_profile
+===
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+===
+
+install ruby 2.1.2
+$ rvm install 2.1.2
+
+clone repository with archmail from github
+$ git clone https://github.com/sysadm/archmail.git && cd archmail
+
+if you use postgresql like a backend just switch to postgresql branch
+$ git checkout -b postgresql origin/postgresql
+
+or mysql
+$ git checkout -b mysql origin/mysql
+
+install all necessary ruby gems
+$ bundle install
+
+
+*that's all.*
+
+Now you can use archmail normally, like
+
+$ ./archmail.rb
+
+without options or
+
+$ ./archmail.rb -h
+
+for help. I suggest to use
+
+$ ./archmail.rb -i
+
+to create config file in interactive mode to reduce misspelling. After that try to backup only one small folder
+to check is everything ok or no.
