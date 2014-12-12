@@ -1,6 +1,7 @@
 source "https://rubygems.org"
 
-gem 'sqlite3', '~> 1.3.9'
+#gem 'sqlite3', '~> 1.3.9'
+gem 'pg', '~> 0.17.1'
 gem 'activerecord', '~> 4.1.6'
 gem 'activesupport', '~> 4.1.6'
 gem 'actionview', '~> 4.1.6'

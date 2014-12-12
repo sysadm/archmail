@@ -168,8 +168,11 @@ class Archmail
   end
 
   def clean_all
-    File.open("./lib/db/mailbox.db", "w+b", 0644) {|f| f.write ''}
+    #File.open("./lib/db/mailbox.db", "w+b", 0644) {|f| f.write ''}
+    Db.drop
+    Db.create
     %x{rm -rf \"#{@env.arch_path}\"}
+    Db.migrate :down
     Db.migrate :up
   end
 

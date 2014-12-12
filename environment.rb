@@ -28,8 +28,12 @@ end
 
 # tells AR what db file to use
 ActiveRecord::Base.establish_connection(
-    :adapter => 'sqlite3',
-    :database => './lib/db/mailbox.db'
+    adapter: 'postgresql',
+    database: 'archmail',
+    encoding: 'unicode',
+    username: 'postgres',
+    host: "localhost",
+    port: 5432
 )
 
 Dir.glob("./lib/extensions/*.rb").each do |file|
