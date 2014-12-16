@@ -129,12 +129,12 @@ class Message < ActiveRecord::Base
     seqno = @env.imap.search(["HEADER", "MESSAGE-ID", message.message_id])[0]
     data = @env.imap.fetch(seqno, ["RFC822.HEADER", "RFC822"])[0]
     @mail = Mail.read_from_string data.attr["RFC822"]
-    file = ([@env.arch_path] + message.folder.ancestry_path).join('/') + "/#{message.id}.html"
+    file = message.path
     header = message.rfc_header.rfc_to_html
 
     unless @mail.attachments.empty?
       message.update_attribute(:has_attachment, true)
-      path = ([@env.arch_path] + message.folder.ancestry_path + [message.id]).join('/') + "/"
+      path = ([@env.arch_path] + message.folder.ancestry_safe_path + [message.id]).join('/') + "/"
       %x{mkdir -p \"#{path}\" }
       @mail.attachments.each_with_index do | attachment, index |
         content_type = attachment.content_type.split(";")[0]
@@ -171,7 +171,7 @@ class Message < ActiveRecord::Base
             content_type = "#{@mail.main_type}/#{@mail.sub_type}"
             original_filename = @mail.content_type_parameters[:name].to_s.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "")
             content_type == "message/rfc822" ? extension = "eml" : extension = original_filename.split('.').last
-            path = ([@env.arch_path] + message.folder.ancestry_path + [message.id]).join('/') + "/"
+            path = ([@env.arch_path] + message.folder.ancestry_safe_path + [message.id]).join('/') + "/"
             %x{mkdir -p \"#{path}\" }
             filename = "#{message.id}_0.#{extension}"
             body = decode_message_safely(message.id, @mail.body, nil)
@@ -258,7 +258,7 @@ class Message < ActiveRecord::Base
 
   def path
     folder = self.folder
-    ([@env.arch_path] + folder.ancestry_path).join('/') + "/#{self.id}.html"
+    ([@env.arch_path] + folder.ancestry_safe_path).join('/') + "/#{self.id}.html"
   end
 
   def self.create_tags
