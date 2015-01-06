@@ -103,15 +103,21 @@ class Message < ActiveRecord::Base
     data = @env.imap.fetch(seqno, ["UID", "ENVELOPE", "RFC822.HEADER", "RFC822.SIZE", "INTERNALDATE", "FLAGS", "X-GM-LABELS", "X-GM-MSGID", "X-GM-THRID"])[0]
     envelope = data.attr["ENVELOPE"]
     mail = Mail.read_from_string data.attr["RFC822.HEADER"]
-    subject = envelope.subject.decode unless envelope.subject.nil?
+    if envelope.subject.nil?
+      subject = mail.subject unless mail.subject.nil?
+    else
+      subject = envelope.subject.decode
+    end
+    subject = subject.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless subject.nil?
     from = envelope.from[0].name.decode unless envelope.from[0].name.nil?
     from = mail.from[0] unless from
+    from = from.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless from.nil?
     mail.in_reply_to.kind_of?(Array) ? in_reply_to = mail.in_reply_to.last : in_reply_to = mail.in_reply_to
     Message.create(flags: data.attr["FLAGS"].join(","),
                    size: data.attr["RFC822.SIZE"],
                    created_at: data.attr["INTERNALDATE"].to_datetime,
-                   subject: subject.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => ""),
-                   from: from.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => ""),
+                   subject: subject,
+                   from: from,
                    uid: data.attr["UID"],
                    message_id: mail.message_id,
                    in_reply_to: in_reply_to,
