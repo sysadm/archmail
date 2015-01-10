@@ -32,8 +32,9 @@ ActiveRecord::Base.establish_connection(
     database: 'archmail',
     encoding: 'unicode',
     username: 'postgres',
-    host: "localhost",
-    port: 5432
+    socket: '/usr/local/var/run/postgres.sock'
+    #host: "localhost",
+    #port: 5432
 )
 
 Dir.glob("./lib/extensions/*.rb").each do |file|
