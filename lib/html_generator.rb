@@ -27,8 +27,8 @@ class HtmlGenerator
     @js = File.open(jspath, "w+b", 0644)
     @js.write "var folder_path=[];\n"
     folders.each do |folder|
-      path = ([@env.arch_path] + folder.ancestry_path).join('/')
-      @js.write "folder_path['folder_#{folder.id}']='#{URI.escape folder.ancestry_path.join('/')}/'\n"
+      path = ([@env.arch_path] + folder.ancestry_safe_path).join('/')
+      @js.write "folder_path['folder_#{folder.id}']='#{URI.escape folder.ancestry_safe_path.join('/')}/'\n"
       if folder.messages.count > 1
         first = folder.messages.order(:created_at).first.created_at.to_date
         last = folder.messages.order(:created_at).last.created_at.to_date

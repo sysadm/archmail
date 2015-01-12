@@ -2,6 +2,7 @@ class InitSchema < ActiveRecord::Migration
   def change
     create_table :folders do |t|
       t.string :name
+      t.string :safe_name
       t.string :imap_name
       t.string :delim
       t.integer :parent_id
