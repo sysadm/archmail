@@ -79,8 +79,12 @@ class Message < ActiveRecord::Base
     data = @env.imap.fetch(seqno, ["UID", "ENVELOPE", "RFC822.HEADER", "RFC822.SIZE", "INTERNALDATE", "FLAGS"])[0]
     envelope = data.attr["ENVELOPE"]
     mail = Mail.read_from_string data.attr["RFC822.HEADER"]
-    mail.subject ||= envelope.subject.decode unless envelope.subject.nil?
-    mail.subject = mail.subject.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless mail.subject.nil?
+    if envelope.subject.nil?
+      subject = mail.subject unless mail.subject.nil?
+    else
+      subject = envelope.subject.decode
+    end
+    subject = subject.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless subject.nil?
     from = envelope.from[0].name.decode if envelope.try(:from).try(:first).try(:name)
     from = mail.from[0] unless from
     from = from.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless from.nil?
@@ -89,7 +93,7 @@ class Message < ActiveRecord::Base
     Message.create(flags: flags,
                    size: data.attr["RFC822.SIZE"],
                    created_at: data.attr["INTERNALDATE"].to_datetime,
-                   subject: mail.subject,
+                   subject: subject,
                    from: from,
                    uid: data.attr["UID"],
                    message_id: mail.message_id,
@@ -109,11 +113,12 @@ class Message < ActiveRecord::Base
       subject = envelope.subject.decode
     end
     subject = subject.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless subject.nil?
-    from = envelope.from[0].name.decode unless envelope.from[0].name.nil?
+    from = envelope.from[0].name.decode if envelope.try(:from).try(:first).try(:name)
     from = mail.from[0] unless from
     from = from.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless from.nil?
+    data.attr["FLAGS"] ? flags = data.attr["FLAGS"].join(",") : flags = ''
     mail.in_reply_to.kind_of?(Array) ? in_reply_to = mail.in_reply_to.last : in_reply_to = mail.in_reply_to
-    Message.create(flags: data.attr["FLAGS"].join(","),
+    Message.create(flags: flags,
                    size: data.attr["RFC822.SIZE"],
                    created_at: data.attr["INTERNALDATE"].to_datetime,
                    subject: subject,
