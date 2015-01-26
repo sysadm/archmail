@@ -90,9 +90,9 @@ class Message < ActiveRecord::Base
     from = from.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless from.nil?
     data.attr["FLAGS"] ? flags = data.attr["FLAGS"].join(",") : flags = ''
     mail.in_reply_to.kind_of?(Array) ? in_reply_to = mail.in_reply_to.last : in_reply_to = mail.in_reply_to
-    puts "Debug #{seqno}:\nflags: #{flags.to_s},\nsize: #{data.attr["RFC822.SIZE"].to_s},\ncreated_at: #{data.attr["INTERNALDATE"].to_datetime.to_s},\n
-subject: #{subject.to_s},\nfrom: #{from.to_s},\nuid: #{uid.to_s},\nmessage_id: #{mail.message_id.to_s},\n
-in_reply_to: #{in_reply_to.to_s},\nrfc_header: #{data.attr["RFC822.HEADER"].to_s}\n =====\n"
+#     puts "Debug #{seqno}:\nflags: #{flags.to_s},\nsize: #{data.attr["RFC822.SIZE"].to_s},\ncreated_at: #{data.attr["INTERNALDATE"].to_datetime.to_s},\n
+# subject: #{subject.to_s},\nfrom: #{from.to_s},\nuid: #{uid.to_s},\nmessage_id: #{mail.message_id.to_s},\n
+# in_reply_to: #{in_reply_to.to_s},\nrfc_header: #{data.attr["RFC822.HEADER"].to_s}\n =====\n"
     Message.create(flags: flags,
                    size: data.attr["RFC822.SIZE"],
                    created_at: data.attr["INTERNALDATE"].to_datetime,
