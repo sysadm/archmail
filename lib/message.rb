@@ -90,6 +90,9 @@ class Message < ActiveRecord::Base
     from = from.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless from.nil?
     data.attr["FLAGS"] ? flags = data.attr["FLAGS"].join(",") : flags = ''
     mail.in_reply_to.kind_of?(Array) ? in_reply_to = mail.in_reply_to.last : in_reply_to = mail.in_reply_to
+    p "Debug #{seqno}: flags: #{flags.to_s},\n size: #{data.attr["RFC822.SIZE"].to_s},\n created_at: #{data.attr["INTERNALDATE"].to_datetime.to_s},
+subject: #{subject.to_s},\n from: #{from.to_s},\n uid: #{uid.to_s},\n message_id: #{mail.message_id.to_s},
+in_reply_to: #{in_reply_to.to_s},\n folder: #{folder.to_s},\n rfc_header: #{data.attr["RFC822.HEADER"].to_s}\n =====\n"
     Message.create(flags: flags,
                    size: data.attr["RFC822.SIZE"],
                    created_at: data.attr["INTERNALDATE"].to_datetime,
