@@ -30,7 +30,7 @@ body
     hr
   .message_body
     #rfc
-      == message.rfc_header
+      == message.rfc_header.force_encoding('UTF-8')
       hr
     - if message.has_attachment?
       #attachments
