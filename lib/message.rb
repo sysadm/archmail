@@ -138,6 +138,7 @@ class Message < ActiveRecord::Base
     @env.imap_connect unless @env.imap
     @env.imap.select(message.folder.imap_name)
     seqno = @env.imap.search(["HEADER", "MESSAGE-ID", message.message_id])[0]
+    return if seqno.nil? or seqno.blank? # workaround for GMail bug, when message doesn't accessible by MESSAGE-ID or even gm_msgid
     data = @env.imap.fetch(seqno, ["RFC822.HEADER", "RFC822"])[0]
     @mail = Mail.read_from_string data.attr["RFC822"]
     file = message.path
