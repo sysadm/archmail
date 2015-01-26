@@ -102,7 +102,7 @@ in_reply_to: #{in_reply_to.to_s},\nrfc_header: #{data.attr["RFC822.HEADER"].to_s
                    message_id: mail.message_id,
                    in_reply_to: in_reply_to,
                    folder: folder,
-                   rfc_header: data.attr["RFC822.HEADER"]
+                   rfc_header: data.attr["RFC822.HEADER"].force_encoding('UTF-8')
     )
   end
 
@@ -130,7 +130,7 @@ in_reply_to: #{in_reply_to.to_s},\nrfc_header: #{data.attr["RFC822.HEADER"].to_s
                    message_id: mail.message_id,
                    in_reply_to: in_reply_to,
                    folder: folder,
-                   rfc_header: data.attr["RFC822.HEADER"],
+                   rfc_header: data.attr["RFC822.HEADER"].force_encoding('UTF-8'),
                    gm_labels: data.attr["X-GM-LABELS"].join(","),
                    gm_msgid: data.attr["X-GM-MSGID"],
                    gm_thrid: data.attr["X-GM-THRID"]
