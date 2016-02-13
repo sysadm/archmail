@@ -164,7 +164,7 @@ end
 
 def arch_logger(message)
   puts message if CMD_LINE_OPTIONS.verbose
-  File.open(CMD_LINE_OPTIONS.logfile, "a+b", 0644) {|f| f.write message} if CMD_LINE_OPTIONS.logfile
+  File.open(CMD_LINE_OPTIONS.logfile, "a+b", 0644) {|f| f.write "#{message}\n"} if CMD_LINE_OPTIONS.logfile
 end
 
 define_backup_path
