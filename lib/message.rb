@@ -1,5 +1,5 @@
 class Message < ActiveRecord::Base
-  attr_reader :env, :view, :conversion_errors
+  attr_reader :env, :view, :conversion_errors, :header_errors
   acts_as_tree
   belongs_to :folder
   has_many :attachments, dependent: :destroy
@@ -9,7 +9,7 @@ class Message < ActiveRecord::Base
   def define_context
     @env ||= Env.new
     @view ||= Class.new(ActionView::Base).new("lib/views/templates")
-    @conversion_errors = {}
+    @conversion_errors,@header_errors = {},{}
   end
 
   def fetch_all_headers(folder)
@@ -86,10 +86,14 @@ class Message < ActiveRecord::Base
     end
     subject = subject.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless subject.nil?
     from = envelope.from[0].name.decode if envelope.try(:from).try(:first).try(:name)
-    from = mail.from[0] unless from
+    from = mail.from[0] unless from or mail.from.nil?
     from = from.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless from.nil?
     data.attr["FLAGS"] ? flags = data.attr["FLAGS"].join(",") : flags = ''
     mail.in_reply_to.kind_of?(Array) ? in_reply_to = mail.in_reply_to.last : in_reply_to = mail.in_reply_to
+    if mail.message_id.nil?
+      @header_errors[seqno] = "uid: #{data.attr["UID"]}, folder: #{folder.imap_name}, size: #{data.attr["RFC822.SIZE"]}, date: #{data.attr["INTERNALDATE"]}"
+      return
+    end
     Message.create(flags: flags,
                    size: data.attr["RFC822.SIZE"],
                    created_at: data.attr["INTERNALDATE"].to_datetime,
@@ -114,10 +118,14 @@ class Message < ActiveRecord::Base
     end
     subject = subject.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless subject.nil?
     from = envelope.from[0].name.decode if envelope.try(:from).try(:first).try(:name)
-    from = mail.from[0] unless from
+    from = mail.from[0] unless from or mail.from.nil?
     from = from.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => "") unless from.nil?
     data.attr["FLAGS"] ? flags = data.attr["FLAGS"].join(",") : flags = ''
     mail.in_reply_to.kind_of?(Array) ? in_reply_to = mail.in_reply_to.last : in_reply_to = mail.in_reply_to
+    if mail.message_id.nil?
+      @header_errors[seqno] = "uid: #{data.attr["UID"]}, folder: #{folder.imap_name}, size: #{data.attr["RFC822.SIZE"]}, date: #{data.attr["INTERNALDATE"]}"
+      return
+    end
     Message.create(flags: flags,
                    size: data.attr["RFC822.SIZE"],
                    created_at: data.attr["INTERNALDATE"].to_datetime,

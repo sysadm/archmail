@@ -66,6 +66,7 @@ class Archmail
         unless folder.attr.downcase.include? "noselect"
           arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')}"
           @message.fetch_all_headers(folder)
+          check_header_errors(@message.header_errors)
           @message.create_messages_tree_in_folder(folder)
         else
           arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')} will be ignored, 'cause have attribute 'Noselect'"
@@ -83,6 +84,7 @@ class Archmail
           unless folder.attr.downcase.include? "noselect"
             arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')}"
             @message.fetch_all_headers(folder)
+            check_header_errors(@message.header_errors)
             @message.create_messages_tree_in_folder(folder)
           else
             arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')} will be ignored, 'cause have attribute 'Noselect'"
@@ -111,6 +113,7 @@ class Archmail
               arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')}"
               folder.messages.destroy_all #clean all non-complete message structures in folder
               @message.fetch_all_headers(folder)
+              check_header_errors(@message.header_errors)
               @message.create_messages_tree_in_folder(folder)
             else
               arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')} will be ignored, 'cause have attribute 'Noselect'"
@@ -133,6 +136,7 @@ class Archmail
               arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')}"
               folder.messages.destroy_all #clean all non-complete message structures in folder
               @message.fetch_all_headers(folder)
+              check_header_errors(@message.header_errors)
               @message.create_messages_tree_in_folder(folder)
             else
               arch_logger "Folder: #{folder.id} - #{folder.self_and_ancestors.map(&:name).reverse.join('/')} will be ignored, 'cause have attribute 'Noselect'"
@@ -178,6 +182,14 @@ class Archmail
     html_generator = HtmlGenerator.new
     html_generator.generate_all
     arch_logger "done"
+  end
+
+  def check_header_errors(errors)
+    unless errors.empty?
+      errors.each do |key, value|
+        arch_logger " Message seqno: #{key} #{value} has no message_id, so it can't be saved."
+      end
+    end
   end
 
   def self_checking
